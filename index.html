@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fatespin</title>
+<style>
+:root{
+  --void:#0a0612;
+  --void2:#120a1f;
+  --panel:#171025;
+  --panel2:#1d1530;
+  --gold:#f0c34a;
+  --gold2:#fff3cf;
+  --violet:#8b5cf6;
+  --pink:#e879f9;
+  --text:#e9e2f7;
+  --dim:#8d82a8;
+  --line:#2c1f47;
+}
+*{box-sizing:border-box;}
+html,body{
+  margin:0;height:100%;overflow:hidden;
+  background:var(--void);
+  font-family:'Trebuchet MS',sans-serif;
+  color:var(--text);
+}
+body{
+  background:
+    radial-gradient(circle at 15% 10%, rgba(139,92,246,.18), transparent 40%),
+    radial-gradient(circle at 85% 90%, rgba(232,121,249,.13), transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(240,195,74,.05), transparent 60%),
+    var(--void);
+}
+#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
+#app{
+  position:relative;z-index:1;
+  display:grid;
+  grid-template-columns: 1.55fr 1fr;
+  grid-template-rows: 100vh;
+  height:100vh;
+  gap:10px;
+  padding:10px;
+}
+.col{display:flex;flex-direction:column;gap:8px;min-height:0;}
+.panel{
+  background:linear-gradient(160deg,var(--panel),var(--panel2));
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:10px 12px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.02) inset, 0 8px 24px rgba(0,0,0,.35);
+}
+h1.logo{
+  margin:0;font-size:26px;letter-spacing:3px;text-align:center;
+  font-family:Georgia,'Times New Roman',serif;
+  background:linear-gradient(90deg,var(--gold2),var(--gold),var(--pink));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 18px rgba(240,195,74,.25);
+}
+.subtitle{text-align:center;color:var(--dim);font-size:10px;letter-spacing:2px;margin-top:-4px;text-transform:uppercase;}
+
+/* TOP STATS */
+.statbar{display:flex;justify-content:space-between;align-items:center;padding:6px 14px;}
+.stat{display:flex;flex-direction:column;align-items:center;flex:1;}
+.stat .v{font-size:14px;font-weight:bold;color:var(--gold2);white-space:nowrap;}
+.stat .l{font-size:8.5px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;}
+.statdiv{width:1px;height:26px;background:var(--line);}
+
+/* ROLL AREA */
+.rollzone{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;min-height:0;gap:10px;
+}
+#resultStage{
+  width:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;min-height:0;
+}
+.bigResult{
+  text-align:center;
+  animation:popin .35s cubic-bezier(.2,1.4,.4,1);
+}
+@keyframes popin{0%{transform:scale(.3) rotate(-8deg);opacity:0;}100%{transform:scale(1) rotate(0);opacity:1;}}
+.bigResult .emoji{font-size:90px;display:block;filter:drop-shadow(0 0 26px currentColor);}
+.bigResult .name{font-size:32px;font-weight:bold;letter-spacing:1.5px;margin-top:4px;}
+.bigResult .coins{font-size:18px;color:var(--gold2);margin-top:4px;}
+.itemPopups{position:absolute;top:6px;left:0;right:0;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;}
+.itemPop{
+  background:rgba(20,12,35,.85);border:1px solid var(--line);border-radius:10px;
+  padding:4px 10px;font-size:12px;display:flex;align-items:center;gap:5px;
+  animation:popin .3s ease;box-shadow:0 0 12px rgba(232,121,249,.25);
+}
+
+#rollBtn{
+  width:200px;height:64px;border-radius:18px;border:none;cursor:pointer;
+  font-size:18px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;
+  background:linear-gradient(160deg,var(--gold),#caa233);
+  color:#241405;
+  box-shadow:0 0 0 1px rgba(255,255,255,.25) inset, 0 6px 0 #7a5b16, 0 10px 22px rgba(240,195,74,.35);
+  transition:transform .08s, box-shadow .08s;
+  position:relative;overflow:hidden;
+}
+#rollBtn:active{transform:translateY(4px);box-shadow:0 0 0 1px rgba(255,255,255,.25) inset, 0 2px 0 #7a5b16;}
+#rollBtn:disabled{filter:grayscale(.6) brightness(.7);cursor:not-allowed;}
+#rollBtn .sheen{
+  position:absolute;top:0;left:-60%;width:40%;height:100%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);
+  animation:sheen 2.6s linear infinite;
+}
+@keyframes sheen{0%{left:-60%;}100%{left:140%;}}
+#cooldownBar{width:200px;height:4px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:-2px;}
+#cooldownFill{height:100%;width:0%;background:linear-gradient(90deg,var(--violet),var(--pink));transition:width linear;}
+
+.luckline{display:flex;gap:10px;justify-content:center;font-size:11px;color:var(--dim);flex-wrap:wrap;}
+.luckline b{color:var(--gold2);}
+.passivebadges{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;min-height:20px;}
+.pbadge{font-size:10px;padding:2px 8px;border-radius:20px;border:1px solid var(--violet);color:var(--pink);background:rgba(139,92,246,.12);}
+.pbadge.off{opacity:.35;border-color:var(--line);color:var(--dim);}
+
+/* LOG */
+#log{
+  flex:1;overflow-y:auto;font-size:11px;display:flex;flex-direction:column-reverse;gap:3px;padding-right:2px;
+}
+#log::-webkit-scrollbar{width:5px;}
+#log::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+.logrow{display:flex;justify-content:space-between;gap:6px;padding:1px 6px;border-radius:5px;background:rgba(255,255,255,.02);font-size:9.5px;line-height:1.4;}
+.logrow .t{color:var(--dim);}
+
+/* RIGHT COLUMN: rarity table + inventory + gauntlets, tabs */
+.tabs{display:flex;gap:4px;}
+.tab{
+  flex:1;text-align:center;padding:6px 4px;font-size:11px;border-radius:8px;cursor:pointer;
+  background:rgba(255,255,255,.03);color:var(--dim);border:1px solid transparent;letter-spacing:.5px;
+}
+.tab.active{background:rgba(240,195,74,.13);color:var(--gold2);border-color:var(--gold);}
+.tabpanel{flex:1;min-height:0;overflow-y:auto;display:none;}
+.tabpanel.active{display:block;}
+.tabpanel::-webkit-scrollbar{width:5px;}
+.tabpanel::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+
+.rarityRow{display:flex;align-items:center;justify-content:space-between;padding:4px 8px;border-radius:8px;margin-bottom:3px;font-size:11px;}
+.rarityRow .rn{font-weight:bold;}
+.rarityRow .rc{color:var(--dim);font-size:9.5px;}
+.rarityRow .rv{color:var(--gold2);font-size:10px;}
+
+.itemCard{
+  display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:9px;margin-bottom:4px;
+  background:rgba(255,255,255,.03);border:1px solid var(--line);font-size:11px;
+}
+.itemCard .ic{font-size:18px;width:22px;text-align:center;}
+.itemCard .iname{font-weight:bold;flex:1;}
+.itemCard .icount{color:var(--gold2);font-size:12px;}
+.itemCard .ichance{color:var(--dim);font-size:9px;}
+
+.gcard{
+  border:1px solid var(--line);border-radius:10px;padding:7px 9px;margin-bottom:5px;font-size:11px;
+  background:rgba(255,255,255,.02);
+}
+.gcard .gh{display:flex;justify-content:space-between;align-items:center;}
+.gcard .gname{font-weight:bold;font-size:12px;}
+.gcard .gluck{font-size:10px;}
+.gcard .greq{color:var(--dim);font-size:9.5px;margin-top:2px;}
+.gcard .gpass{font-size:9.5px;margin-top:1px;}
+.gcard button{
+  margin-top:5px;width:100%;padding:4px;border-radius:7px;border:1px solid var(--line);
+  background:rgba(255,255,255,.06);color:var(--gold2);font-size:10px;cursor:pointer;letter-spacing:.5px;
+}
+.gcard button:disabled{opacity:.4;cursor:not-allowed;}
+
+#toastWrap{position:fixed;top:10px;right:14px;display:flex;flex-direction:column;gap:6px;z-index:50;}
+.toast{
+  background:rgba(20,12,35,.92);border:1px solid var(--gold);border-radius:10px;padding:8px 14px;font-size:12px;
+  box-shadow:0 0 18px rgba(240,195,74,.3);animation:popin .3s ease;
+}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div id="toastWrap"></div>
+
+<div id="app">
+
+  <!-- LEFT: Roll column -->
+  <div class="col">
+    <div class="panel" style="padding:10px 12px 6px;">
+      <h1 class="logo">✦ FATESPIN ✦</h1>
+    </div>
+
+    <div class="panel statbar">
+      <div class="stat"><div class="v" id="statCoins">0</div><div class="l">Coins</div></div>
+      <div class="statdiv"></div>
+      <div class="stat"><div class="v" id="statRolls">0</div><div class="l">Rolls</div></div>
+      <div class="statdiv"></div>
+      <div class="stat"><div class="v" id="statLuck">x1.00</div><div class="l">Luck</div></div>
+      <div class="statdiv"></div>
+      <div class="stat"><div class="v" id="statItemMult">x1</div><div class="l">Item Chance</div></div>
+      <div class="statdiv"></div>
+      <div class="stat"><div class="v" id="statHighest">—</div><div class="l">Highest Rarity</div></div>
+    </div>
+
+    <div class="panel rollzone">
+      <div id="resultStage">
+        <div class="itemPopups" id="itemPopups"></div>
+        <div class="bigResult" id="bigResult">
+          <span class="emoji">🌀</span>
+          <div class="name" style="color:var(--dim)">Awaiting your fate...</div>
+        </div>
+      </div>
+      <div class="passivebadges" id="passiveBadges"></div>
+      <div class="luckline" id="luckLine"></div>
+      <button id="rollBtn"><span class="sheen"></span><span id="rollBtnLabel">ROLL</span></button>
+      <div id="cooldownBar"><div id="cooldownFill"></div></div>
+    </div>
+
+    <div class="panel" style="flex:0 0 26%;display:flex;flex-direction:column;min-height:0;">
+      <div style="font-size:10px;color:var(--dim);letter-spacing:1px;margin-bottom:4px;">RECENT FATES</div>
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Info column -->
+  <div class="col">
+    <div class="panel" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+      <div class="tabs">
+        <div class="tab active" data-tab="rarities">Rarities</div>
+        <div class="tab" data-tab="items">Items</div>
+        <div class="tab" data-tab="gauntlets">Gauntlets</div>
+      </div>
+      <div class="tabpanel active" id="tab-rarities"></div>
+      <div class="tabpanel" id="tab-items"></div>
+      <div class="tabpanel" id="tab-gauntlets"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============== STARFIELD BACKGROUND ============== */
+const cv=document.getElementById('stars');
+const ctx=cv.getContext('2d');
+function resize(){cv.width=innerWidth;cv.height=innerHeight;}
+resize();window.addEventListener('resize',resize);
+let starList=[];
+for(let i=0;i<140;i++){starList.push({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.4+.2,s:Math.random()*.02+.003,p:Math.random()*6.28});}
+function drawStars(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  for(const s of starList){
+    s.p+=s.s;
+    const a=.35+.65*Math.abs(Math.sin(s.p));
+    ctx.beginPath();
+    ctx.fillStyle=`rgba(230,220,255,${a})`;
+    ctx.arc(s.x,s.y,s.r,0,6.28);
+    ctx.fill();
+  }
+  requestAnimationFrame(drawStars);
+}
+drawStars();
+
+/* ============== DATA: RARITIES ============== */
+const RARITIES = [
+  {name:"Common",     denom:2,           coins:10,          color:"#cfd3da", emoji:"🪙"},
+  {name:"Uncommon",   denom:4,           coins:25,          color:"#7fe07f", emoji:"🍃"},
+  {name:"Rare",       denom:10,          coins:75,          color:"#5ab4ff", emoji:"💧"},
+  {name:"Epic",       denom:25,          coins:200,         color:"#a06bff", emoji:"🔮"},
+  {name:"Mythic",     denom:75,          coins:600,         color:"#e066ff", emoji:"🌸"},
+  {name:"Legendary",  denom:200,         coins:2000,        color:"#ff9d3d", emoji:"🔥"},
+  {name:"Ancient",    denom:600,         coins:7500,        color:"#caa15a", emoji:"🏺"},
+  {name:"Celestial",  denom:2000,        coins:25000,       color:"#7ee8ff", emoji:"🌌"},
+  {name:"Divine",     denom:7500,        coins:100000,      color:"#fff39e", emoji:"✨"},
+  {name:"Ethereal",   denom:25000,       coins:400000,      color:"#cdfff9", emoji:"👻"},
+  {name:"Cosmic",     denom:100000,      coins:1500000,     color:"#b388ff", emoji:"🪐"},
+  {name:"Stellar",    denom:250000,      coins:3000000,     color:"#ffd66b", emoji:"🌟"},
+  {name:"Galactic",   denom:500000,      coins:7000000,     color:"#ff7ad9", emoji:"🌠"},
+  {name:"Transcendent",denom:2000000,    coins:30000000,    color:"#9bffb0", emoji:"🧬"},
+  {name:"Omnipotent", denom:10000000,    coins:150000000,   color:"#ffffff", emoji:"⚡"},
+  {name:"Primordial", denom:50000000,    coins:500000000,   color:"#ff4d4d", emoji:"🌋"},
+  {name:"Genesis",    denom:100000000,   coins:1000000000,  color:"#ffe6a8", emoji:"👑"},
+].reverse(); // rarest first for rolling logic, we'll reverse back for display
+
+/* ============== DATA: ITEMS ============== */
+// "common group" items - boosted only by luck, not by item-chance multipliers
+// "rare group" items (Gear and above) - boosted by luck AND item-chance multipliers
+const ITEMS_COMMON = [
+  {key:"clover",   name:"Clover",        emoji:"🍀", denom:1,     color:"#7fe07f", guaranteed:true},
+  {key:"solstice", name:"Solstice",      emoji:"☀️", denom:5,     color:"#ffb84d"},
+  {key:"crescent", name:"Crescent Moon", emoji:"🌙", denom:5,     color:"#cfd6ff"},
+  {key:"snowflake",name:"Snowflake",     emoji:"❄️", denom:30,    color:"#bdf2ff"},
+];
+const ITEMS_RARE = [
+  {key:"gear",        name:"Gear",          emoji:"⚙️", denom:1000,    color:"#c9b37a"},
+  {key:"oscarheart",  name:"Oscar Heart",   emoji:"❤️‍🔥",denom:25000,  color:"#ff4d6d"},
+  {key:"oscaramulet", name:"Oscar Amulet",  emoji:"📿", denom:50000,   color:"#ffd700"},
+  {key:"genesiscore", name:"Genesis Core",  emoji:"🔆", denom:100000,  color:"#fff3cf"},
+  {key:"gargantuan",  name:"Gargantuan",    emoji:"🕳️", denom:500000,  color:"#7a2dff"},
+];
+const ALL_ITEMS = [...ITEMS_COMMON, ...ITEMS_RARE];
+
+/* ============== DATA: GAUNTLETS ============== */
+const GAUNTLETS = [
+  {
+    key:"lucky", name:"Lucky Gauntlets", emoji:"🍀🧤", luck:50, color:"#5ee06b",
+    req:{clover:5, coins:100},
+    passive:"None — pure luck boost.",
+  },
+  {
+    key:"solar", name:"Solar Gauntlets", emoji:"☀️🧤", luck:100, color:"#ffb13d",
+    req:{solstice:5, coins:10000},
+    passive:"Solar Rays: 5x Luck for 5 rolls every 10 rolls.",
+  },
+  {
+    key:"lunar", name:"Lunar Gauntlets", emoji:"🌙🧤", luck:100, color:"#8fb4ff",
+    req:{crescent:5, coins:10000},
+    passive:"Lunar Surge: 10x Luck for 1 roll every 10 rolls.",
+  },
+  {
+    key:"eclipse", name:"Eclipse Gauntlets", emoji:"🌑🧤", luck:300, color:"#6b5dff",
+    req:{gauntlets:["solar","lunar"]},
+    passive:"Solar Rays + Lunar Surge combined.",
+  },
+  {
+    key:"frosty", name:"Frosty Gauntlets", emoji:"❄️🧤", luck:350, color:"#5fd8ff",
+    req:{snowflake:5, coins:250000},
+    passive:"Permanent 2x Item Chance (Gear-tier and above).",
+  },
+  {
+    key:"steampunk", name:"Steampunk Gauntlets", emoji:"⚙️🧤", luck:500, color:"#c98a3e",
+    req:{clover:1000, gear:2, coins:1000000},
+    passive:"Shocked Gears: 9x Luck for 10 rolls every 12 rolls.",
+  },
+  {
+    key:"oscar", name:"Great Gauntlets of Oscar", emoji:"❤️🧤", luck:2500, color:"#ff4d6d",
+    req:{oscarheart:1, oscaramulet:1, clover:10000, coins:70000000},
+    passive:"Permanent 5x Item Chance (Gear-tier and above).",
+  },
+  {
+    key:"blackhole", name:"Blackhole Gauntlets", emoji:"🕳️🧤", luck:5000, color:"#a855f7",
+    req:{gargantuan:2, coins:1000000000},
+    passive:"Gargantuan Burst: 40x Luck for 40 rolls every 25 rolls.",
+  },
+  {
+    key:"starscourge", name:"Starscourge Gauntlets", emoji:"🌠🧤", luck:9000, color:"#ffd700",
+    req:{genesiscore:3, snowflake:10000, coins:500000000},
+    passive:"Permanent 10x Item Chance (Gear-tier and above). Fates flash instantly on screen.",
+  },
+];
+
+/* ============== STATE ============== */
+let state = {
+  coins: 0,
+  rolls: 0,
+  items: {}, // key -> count
+  gauntletsOwned: [], // keys
+  equipped: null,
+  cooldown: false,
+  highestRarity: null,
+  // passive cycle trackers
+  solar:{phase:'active',count:0}, lunar:{phase:'active',count:0}, steampunk:{phase:'active',count:0}, blackhole:{phase:'active',count:0},
+};
+ALL_ITEMS.forEach(i=>state.items[i.key]=0);
+
+function fmt(n){
+  if(n>=1e12) return (n/1e12).toFixed(2)+"T";
+  if(n>=1e9) return (n/1e9).toFixed(2)+"B";
+  if(n>=1e6) return (n/1e6).toFixed(2)+"M";
+  if(n>=1e3) return (n/1e3).toFixed(2)+"K";
+  return Math.floor(n).toString();
+}
+function odds(denom){
+  if(denom>=1e6) return "1/"+(denom/1e6)+"M";
+  if(denom>=1e3) return "1/"+(denom/1e3)+"K";
+  return "1/"+denom;
+}
+
+/* ============== LUCK / PASSIVE CALCULATION ============== */
+function getGauntlet(key){ return GAUNTLETS.find(g=>g.key===key); }
+
+function getActivePassiveLuck(){
+  // returns multiplier from cyclical/temp passives of equipped gauntlet (and inherited ones for eclipse)
+  if(!state.equipped) return 1;
+  const g = getGauntlet(state.equipped);
+  let mult = 1;
+  const keysToCheck = g.key==="eclipse" ? ["solar","lunar"] : [g.key];
+  for(const k of keysToCheck){
+    if(k==="solar" && state.solar.phase==='active') mult *= 5;
+    if(k==="lunar" && state.lunar.phase==='active') mult *= 10;
+    if(k==="steampunk" && state.steampunk.phase==='active') mult *= 9;
+    if(k==="blackhole" && state.blackhole.phase==='active') mult *= 40;
+  }
+  return mult;
+}
+
+function getBaseLuck(){
+  if(!state.equipped) return 1;
+  const g = getGauntlet(state.equipped);
+  return 1 + g.luck/100;
+}
+
+function getTotalLuck(){
+  return getBaseLuck() * getActivePassiveLuck();
+}
+
+function getItemChanceMult(){
+  // permanent item-chance multipliers, only active while gauntlet equipped, applies to Gear-tier+ items
+  if(!state.equipped) return 1;
+  const g = getGauntlet(state.equipped);
+  let mult = 1;
+  if(g.key==="frosty") mult *= 2;
+  if(g.key==="oscar") mult *= 5;
+  if(g.key==="starscourge") mult *= 10;
+  return mult;
+}
+
+function tickPassive(p, activeLen, gapLen){
+  p.count++;
+  if(p.phase==='active'){
+    if(p.count>=activeLen){ p.phase='cooldown'; p.count=0; }
+  } else {
+    if(p.count>=gapLen){ p.phase='active'; p.count=0; }
+  }
+}
+
+function advancePassiveCounters(){
+  // active duration, then a FULL separate cooldown count starts only once active period ends
+  tickPassive(state.solar, 5, 10);       // 5 rolls active, then 10 rolls before next activation
+  tickPassive(state.lunar, 1, 10);       // 1 roll active, then 10 rolls before next activation
+  tickPassive(state.steampunk, 10, 12);  // 10 rolls active, then 12 rolls before next activation
+  tickPassive(state.blackhole, 40, 25);  // 40 rolls active, then 25 rolls before next activation
+}
+
+/* ============== ROLL LOGIC ============== */
+function rollRarity(luck){
+  // RARITIES is reverse-sorted (rarest first)
+  for(const r of RARITIES){
+    const effDenom = Math.max(2, r.denom/luck);
+    if(Math.random() < 1/effDenom){
+      return r;
+    }
+  }
+  return RARITIES[RARITIES.length-1]; // common fallback
+}
+
+function rollItems(itemMult){
+  const obtained = [];
+  // rare-tier items first (rarest to least rare), boosted ONLY by item-chance multiplier (not luck)
+  const rareSorted = [...ITEMS_RARE].sort((a,b)=>b.denom-a.denom);
+  for(const it of rareSorted){
+    const effDenom = Math.max(2, it.denom/itemMult);
+    if(Math.random() < 1/effDenom){
+      obtained.push(it);
+      break; // one "other item" guaranteed slot, but let rare items take priority
+    }
+  }
+  if(obtained.length===0){
+    // common-tier items (excluding clover) — Solstice, Crescent, Snowflake — fixed odds, NOT affected by luck or item chance
+    const commonSorted = [...ITEMS_COMMON].filter(i=>!i.guaranteed).sort((a,b)=>b.denom-a.denom);
+    for(const it of commonSorted){
+      if(Math.random() < 1/it.denom){
+        obtained.push(it);
+        break;
+      }
+    }
+  }
+  // clover guaranteed always
+  const clover = ITEMS_COMMON.find(i=>i.guaranteed);
+  obtained.push(clover);
+  return obtained;
+}
+
+function doRoll(){
+  if(state.cooldown) return;
+  state.cooldown = true;
+  document.getElementById('rollBtn').disabled = true;
+
+  const luck = getTotalLuck();
+  const itemMult = getItemChanceMult();
+  const rarity = rollRarity(luck);
+  const itemsGot = rollItems(itemMult);
+
+  state.coins += rarity.coins;
+  state.rolls += 1;
+  itemsGot.forEach(it=> state.items[it.key]++ );
+
+  itemsGot.forEach(it=>{
+    if(["oscarheart","oscaramulet","genesiscore","gargantuan"].includes(it.key)){
+      toast(`${it.emoji} ${it.name.toUpperCase()} DROPPED!`);
+    }
+  });
+
+  if(state.highestRarity===null || RARITIES.indexOf(rarity) < RARITIES.indexOf(state.highestRarity)){
+    state.highestRarity = rarity;
+  }
+
+  showResult(rarity, itemsGot);
+  pushLog(rarity, itemsGot);
+  advancePassiveCounters();
+  renderAll();
+  startCooldown();
+}
+
+function startCooldown(){
+  const fill = document.getElementById('cooldownFill');
+  fill.style.transition='none';
+  fill.style.width='0%';
+  requestAnimationFrame(()=>{
+    fill.style.transition='width 1s linear';
+    fill.style.width='100%';
+  });
+  setTimeout(()=>{
+    state.cooldown=false;
+    document.getElementById('rollBtn').disabled=false;
+  },1000);
+}
+
+/* ============== DISPLAY RESULT ============== */
+function showResult(rarity, itemsGot){
+  const stage = document.getElementById('bigResult');
+  stage.style.animation='none';
+  void stage.offsetWidth;
+  stage.style.animation='';
+  stage.innerHTML = `
+    <span class="emoji" style="color:${rarity.color}">${rarity.emoji}</span>
+    <div class="name" style="color:${rarity.color}">${rarity.name}</div>
+    <div class="coins">+${fmt(rarity.coins)} coins</div>
+  `;
+  const popWrap = document.getElementById('itemPopups');
+  popWrap.innerHTML='';
+  itemsGot.forEach(it=>{
+    const d = document.createElement('div');
+    d.className='itemPop';
+    d.style.borderColor = it.color;
+    d.innerHTML = `<span>${it.emoji}</span><span style="color:${it.color}">+1 ${it.name}</span>`;
+    popWrap.appendChild(d);
+  });
+}
+
+function pushLog(rarity, itemsGot){
+  const log = document.getElementById('log');
+  const row = document.createElement('div');
+  row.className='logrow';
+  const itemStr = itemsGot.map(i=>i.emoji).join(' ');
+  row.innerHTML = `<span style="color:${rarity.color}">${rarity.emoji} ${rarity.name}</span><span class="t">+${fmt(rarity.coins)} | ${itemStr}</span>`;
+  log.appendChild(row);
+  while(log.children.length>15) log.removeChild(log.firstChild);
+}
+
+function toast(msg){
+  const wrap = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className='toast';
+  t.textContent = msg;
+  wrap.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .4s';setTimeout(()=>t.remove(),400);},2200);
+}
+
+/* ============== CRAFTING ============== */
+function canCraft(g){
+  if(state.gauntletsOwned.includes(g.key)) return false;
+  const req = g.req;
+  if(req.gauntlets){
+    return req.gauntlets.every(k=>state.gauntletsOwned.includes(k));
+  }
+  for(const k in req){
+    if(k==='coins'){ if(state.coins < req.coins) return false; }
+    else { if((state.items[k]||0) < req[k]) return false; }
+  }
+  return true;
+}
+
+function craft(g){
+  if(!canCraft(g)) return;
+  const req = g.req;
+  if(req.gauntlets){
+    req.gauntlets.forEach(k=>{
+      state.gauntletsOwned.splice(state.gauntletsOwned.indexOf(k),1);
+    });
+  } else {
+    for(const k in req){
+      if(k==='coins') state.coins -= req.coins;
+      else state.items[k] -= req[k];
+    }
+  }
+  state.gauntletsOwned.push(g.key);
+  state.equipped = g.key;
+  toast(`Crafted ${g.name}! ✦`);
+  renderAll();
+}
+
+function equip(key){
+  state.equipped = state.equipped===key ? null : key;
+  // reset passive counters on equip change
+  state.solar={phase:'active',count:0}; state.lunar={phase:'active',count:0}; state.steampunk={phase:'active',count:0}; state.blackhole={phase:'active',count:0};
+  renderAll();
+}
+
+/* ============== RENDER ============== */
+function reqString(g){
+  const req = g.req;
+  if(req.gauntlets) return "Requires: "+req.gauntlets.map(k=>getGauntlet(k).name).join(" + ");
+  const parts=[];
+  for(const k in req){
+    if(k==='coins') parts.push(fmt(req.coins)+" coins");
+    else parts.push(fmt(req[k])+"x "+(ALL_ITEMS.find(i=>i.key===k)?.name||k));
+  }
+  return "Requires: "+parts.join(", ");
+}
+
+function renderStats(){
+  document.getElementById('statCoins').textContent = fmt(state.coins);
+  document.getElementById('statRolls').textContent = state.rolls;
+  document.getElementById('statLuck').textContent = "x"+getTotalLuck().toFixed(2);
+  document.getElementById('statItemMult').textContent = "x"+getItemChanceMult();
+  const hEl = document.getElementById('statHighest');
+  if(state.highestRarity){
+    hEl.textContent = state.highestRarity.emoji+" "+state.highestRarity.name;
+    hEl.style.color = state.highestRarity.color;
+  } else {
+    hEl.textContent = "—";
+    hEl.style.color = "var(--gold2)";
+  }
+}
+
+function renderLuckLine(){
+  const base = getBaseLuck();
+  const passive = getActivePassiveLuck();
+  document.getElementById('luckLine').innerHTML =
+    `Base Luck: <b>x${base.toFixed(2)}</b> &nbsp;|&nbsp; Passive: <b>x${passive.toFixed(0)}</b> &nbsp;|&nbsp; Equipped: <b>${state.equipped?getGauntlet(state.equipped).name:'None'}</b>`;
+}
+
+function renderPassiveBadges(){
+  const wrap = document.getElementById('passiveBadges');
+  wrap.innerHTML='';
+  if(!state.equipped){ return; }
+  const g = getGauntlet(state.equipped);
+  const badges = [];
+  const addCycle=(label,p,activeLen,gapLen)=>{
+    const active = p.phase==='active';
+    const remaining = active ? (activeLen-p.count) : (gapLen-p.count);
+    badges.push(`<span class="pbadge ${active?'':'off'}">${label} ${active?(remaining)+'r left ACTIVE':'cooldown '+remaining+'r'}</span>`);
+  };
+  const keys = g.key==="eclipse" ? ["solar","lunar"] : [g.key];
+  keys.forEach(k=>{
+    if(k==="solar") addCycle("☀️ Solar Rays", state.solar,5,10);
+    if(k==="lunar") addCycle("🌙 Lunar Surge", state.lunar,1,10);
+    if(k==="steampunk") addCycle("⚙️ Shocked Gears", state.steampunk,10,12);
+    if(k==="blackhole") addCycle("🕳️ Gargantuan Burst", state.blackhole,40,25);
+    if(k==="frosty") badges.push(`<span class="pbadge">❄️ 2x Item Chance</span>`);
+    if(k==="oscar") badges.push(`<span class="pbadge">❤️ 5x Item Chance</span>`);
+    if(k==="starscourge") badges.push(`<span class="pbadge">🌠 10x Item Chance</span>`);
+  });
+  wrap.innerHTML = badges.join('');
+}
+
+function renderRarities(){
+  const wrap = document.getElementById('tab-rarities');
+  const luck = getTotalLuck();
+  const list = [...RARITIES].reverse(); // common -> genesis for display
+  wrap.innerHTML = list.map(r=>{
+    const eff = Math.max(2, r.denom/luck);
+    return `<div class="rarityRow" style="border:1px solid ${r.color}55;background:${r.color}11;">
+      <span class="rn" style="color:${r.color}">${r.emoji} ${r.name}</span>
+      <span class="rc">base ${odds(r.denom)}<br><span class="rv">now 1/${fmt(Math.ceil(eff))}</span></span>
+      <span class="rv">+${fmt(r.coins)}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderItems(){
+  const wrap = document.getElementById('tab-items');
+  const luck = getTotalLuck();
+  const itemMult = getItemChanceMult();
+  wrap.innerHTML = ALL_ITEMS.map(it=>{
+    let chanceLabel;
+    if(it.guaranteed){ chanceLabel = "guaranteed"; }
+    else if(ITEMS_RARE.includes(it)){
+      const eff = Math.max(2,it.denom/itemMult);
+      chanceLabel = `base 1/${fmt(it.denom)} → now 1/${fmt(Math.ceil(eff))}`;
+    } else {
+      chanceLabel = `1/${it.denom} (fixed)`;
+    }
+    return `<div class="itemCard" style="border-color:${it.color}66">
+      <span class="ic">${it.emoji}</span>
+      <span class="iname" style="color:${it.color}">${it.name}</span>
+      <span class="icount">${state.items[it.key]}</span>
+      <span class="ichance">${chanceLabel}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderGauntlets(){
+  const wrap = document.getElementById('tab-gauntlets');
+  wrap.innerHTML = GAUNTLETS.map(g=>{
+    const owned = state.gauntletsOwned.includes(g.key);
+    const equipped = state.equipped===g.key;
+    const craftable = canCraft(g);
+    let btn;
+    if(owned){
+      btn = `<button style="${equipped?`border-color:${g.color};background:${g.color}28;color:${g.color}`:''}" onclick="equip('${g.key}')">${equipped?'★ EQUIPPED':'Equip'}</button>`;
+    } else {
+      btn = `<button ${craftable?'':'disabled'} style="${craftable?`border-color:${g.color};background:${g.color}1f;`:''}" onclick="craft(getGauntlet('${g.key}'))">${craftable?'Craft':'Locked'}</button>`;
+    }
+    const cardStyle = `border-color:${g.color}${owned?'cc':'40'};background:${g.color}${equipped?'22':(owned?'14':'08')};${equipped?`box-shadow:0 0 12px ${g.color}55;`:''}`;
+    return `<div class="gcard" style="${cardStyle}">
+      <div class="gh"><span class="gname" style="color:${g.color}">${g.emoji} ${g.name}</span><span class="gluck" style="color:${g.color}">+${g.luck}% Luck</span></div>
+      <div class="greq">${reqString(g)}</div>
+      <div class="gpass" style="color:${g.color}">Passive: ${g.passive}</div>
+      ${btn}
+    </div>`;
+  }).join('');
+}
+
+function renderAll(){
+  renderStats();
+  renderLuckLine();
+  renderPassiveBadges();
+  renderRarities();
+  renderItems();
+  renderGauntlets();
+}
+
+/* ============== EVENTS ============== */
+document.getElementById('rollBtn').addEventListener('click', doRoll);
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tabpanel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-'+tab.dataset.tab).classList.add('active');
+  });
+});
+
+renderAll();
+</script>
+</body>
+</html>

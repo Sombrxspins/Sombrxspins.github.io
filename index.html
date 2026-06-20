@@ -585,8 +585,6 @@ function craft(g){
 
 function equip(key){
   state.equipped = state.equipped===key ? null : key;
-  // reset passive counters on equip change
-  state.solar={phase:'active',count:0}; state.lunar={phase:'active',count:0}; state.steampunk={phase:'active',count:0}; state.blackhole={phase:'active',count:0};
   renderAll();
 }
 

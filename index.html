@@ -235,6 +235,28 @@ body{
   border:1px solid rgba(255,255,255,.15);
 }
 
+/* potion buffs row */
+.potionRow{
+  position:absolute;
+  top:10px; left:0; right:0;
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  flex-wrap:wrap;
+  z-index:6;
+  pointer-events:none;
+}
+.potionChip{
+  font-size:10px;
+  padding:3px 9px;
+  border-radius:20px;
+  background:rgba(124,92,255,.18);
+  backdrop-filter:blur(2px);
+  border:1px solid var(--accent);
+  color:#cfd2ff;
+  font-weight:700;
+}
+
 /* particle */
 .particle{
   position:absolute;
@@ -387,6 +409,17 @@ body{
 }
 .craftBtn:disabled{background:#2a2a3a; color:#666; cursor:not-allowed;}
 
+.potionTimer{
+  font-size:10px; color:var(--accent-2); font-weight:700; margin-top:6px;
+}
+.activePotionsBox{
+  border:1px solid var(--good); border-radius:10px; padding:8px 10px; margin-bottom:12px;
+  background:rgba(67,224,138,.06);
+}
+.activePotionsBox .title{font-size:10px; letter-spacing:1px; color:var(--good); font-weight:800; margin-bottom:6px;}
+.activePotionsBox .row{display:flex; justify-content:space-between; font-size:11px; padding:2px 0; color:var(--text);}
+.activePotionsBox .empty{font-size:11px; color:var(--dim);}
+
 .toast{
   position:fixed; top:20px; left:50%; transform:translateX(-50%);
   background:rgba(10,10,20,.92); border:1px solid var(--accent);
@@ -533,6 +566,7 @@ body{
       <div class="stageGrid"></div>
       <div class="fxLayer" id="bgFxLayer"></div>
       <div class="fxLayer" id="particleLayer"></div>
+      <div class="potionRow" id="potionRow"></div>
       <div class="auraText" id="auraText">
         <span class="auraSub">Press Roll to Begin</span>
         <span class="r-common" id="auraMain">— — —</span>
@@ -562,6 +596,7 @@ body{
     <div class="tabs">
       <div class="tab active" data-tab="inv">Inventory</div>
       <div class="tab" data-tab="craft">Gauntlets</div>
+      <div class="tab" data-tab="potion">Potions</div>
     </div>
     <div class="tabContent" id="tabContent"></div>
   </div>
@@ -619,15 +654,16 @@ const AURAS = [
 ];
 const AURA_BY_ID = Object.fromEntries(AURAS.map(a=>[a.id,a]));
 
-const GAUNTLETS = [
-  {id:'hadesfist', name:'(reserved)'}, // placeholder unused
-];
 // real gauntlet list, ranked by rarity/power
 const GAUNTLET_LIST = [
   {id:'starfall', name:'Starfall Gauntlet', slot:'left-only', req:{starlord:2}, luck:0, bonusOverride:4, desc:'Bonus Roll becomes 4x luck (instead of 2x) on every 10th roll.'},
-  {id:'blackholeg', name:'Blackhole Gauntlet', slot:'right-only', req:{blackhole:1, galactic:20, rainbow:3}, luck:600, cooldown:0.7, desc:'+600% Luck, 0.7s roll cooldown.'},
+  // NERFED: Blackhole now requires far fewer galactics & rainbows
+  {id:'blackholeg', name:'Blackhole Gauntlet', slot:'right-only', req:{blackhole:1, galactic:5, rainbow:1}, luck:600, cooldown:0.7, desc:'+600% Luck, 0.7s roll cooldown.'},
+  // NERFED: Volcanic now just needs a big stack of Volcanics, no Soul King
   {id:'volcanicg', name:'Volcanic Gauntlet', slot:'right-only', req:{volcanic:50}, luck:395, desc:'+395% Luck.'},
+  // NERFED: Steampunk no longer needs Rainbow, needs more Zombies
   {id:'steampunk', name:'Steampunk Gauntlet', slot:'right-only', req:{galactic:1, zombie:5}, luck:195, desc:'+195% Luck.'},
+  // NERFED: Frosty swaps its Galactic requirement for a Zombie
   {id:'frosty', name:'Frosty Gauntlet', slot:'right-only', req:{zombie:1, starstrider:10}, luck:100, desc:'+100% Luck.'},
   {id:'desire', name:'Desire Gauntlet', slot:'right-only', req:{divine:5, dizzy:1, demonic:1}, luck:50, desc:'+50% Luck.'},
   {id:'lucky', name:'Lucky Gauntlet', slot:'right-only', req:{common:3}, luck:25, desc:'+25% Luck.'},
@@ -635,6 +671,15 @@ const GAUNTLET_LIST = [
 const GAUNTLET_BY_ID = Object.fromEntries(GAUNTLET_LIST.map(g=>[g.id,g]));
 // order for crafting display: most powerful first (already roughly so), but let's rank ascending by luck for clarity with starfall last special
 const CRAFT_ORDER = ['lucky','desire','frosty','steampunk','volcanicg','blackholeg','starfall'];
+
+/* ===================== POTIONS ===================== */
+const POTIONS = [
+  {id:'lucky', name:'Lucky Potion', desc:'+100% Luck for 1 minute.', type:'timed', duration:60, luckPct:100, reqAuras:{common:100}, reqPotions:{}},
+  {id:'speedy', name:'Speedy Potion', desc:'-0.1s Roll Cooldown for 1 minute.', type:'timed', duration:60, cooldownDelta:-0.1, reqAuras:{common:100}, reqPotions:{}},
+  {id:'transcendent', name:'Transcendent Potion', desc:'+100,000% Luck for your next roll only.', type:'instant', luckPct:100000, reqAuras:{rainbow:3, soulking:1}, reqPotions:{speedy:10, lucky:10}},
+];
+const POTION_BY_ID = Object.fromEntries(POTIONS.map(p=>[p.id,p]));
+const POTION_ORDER = ['lucky','speedy','transcendent'];
 
 /* ===================== STATE ===================== */
 const state = {
@@ -645,6 +690,9 @@ const state = {
   gauntletsOwned:{}, // gauntletId -> count owned
   equippedLeft:null,
   equippedRight:null,
+  potionsOwned:{},      // potionId -> count owned (crafted, unused)
+  activePotions:{},     // potionId -> expiresAt (ms timestamp), for timed potions
+  pendingNextRoll:0,    // luck % bonus queued for the very next roll only (from instant potions)
   isRolling:false,
   autoRoll:false,
   bestRarityIndex: AURAS.length, // index into AURAS, lower = rarer; start beyond list
@@ -652,6 +700,7 @@ const state = {
 };
 AURAS.forEach(a=>{state.inventory[a.id]=0; state.totalObtained[a.id]=0;});
 GAUNTLET_LIST.forEach(g=>{state.gauntletsOwned[g.id]=0;});
+POTIONS.forEach(p=>{state.potionsOwned[p.id]=0;});
 
 /* ===================== HELPERS ===================== */
 function fmt(n){ return n.toLocaleString('en-US'); }
@@ -663,11 +712,17 @@ function toast(msg){
   t._timer = setTimeout(()=>t.classList.remove('show'), 1800);
 }
 
+function isPotionActive(pid){
+  return state.activePotions[pid] && Date.now() < state.activePotions[pid];
+}
+
 function currentLuckMultiplier(bonusActive){
   let pct = 0;
   [state.equippedLeft, state.equippedRight].forEach(gid=>{
     if(gid){ pct += GAUNTLET_BY_ID[gid].luck || 0; }
   });
+  if(isPotionActive('lucky')) pct += POTION_BY_ID.lucky.luckPct;
+  if(state.pendingNextRoll) pct += state.pendingNextRoll;
   let mult = 1 + pct/100;
   if(bonusActive){
     let starfall = (state.equippedLeft==='starfall'||state.equippedRight==='starfall');
@@ -680,6 +735,8 @@ function currentCooldownMs(){
   [state.equippedLeft, state.equippedRight].forEach(gid=>{
     if(gid && GAUNTLET_BY_ID[gid].cooldown){ cd = Math.min(cd, GAUNTLET_BY_ID[gid].cooldown); }
   });
+  if(isPotionActive('speedy')) cd += POTION_BY_ID.speedy.cooldownDelta;
+  cd = Math.max(cd, 0.1);
   return cd*1000;
 }
 
@@ -842,6 +899,7 @@ function renderAuraOnStage(a, label){
 /* keep whatever is on stage alive permanently (re-spawn its particles),
    and rotate through any equipped auras so their effects stay showing */
 function ambientTick(){
+  renderPotionRow();
   if(state.isRolling) return;
   if(state._holdUntil && Date.now() < state._holdUntil) return;
   if(state.equippedAuras.size > 0){
@@ -880,6 +938,7 @@ function doRoll(){
   const startRollIdx = state.rollCount + 1;
   const bonusActive = (startRollIdx % 10 === 0);
   const luckMult = currentLuckMultiplier(bonusActive);
+  const transcendentUsed = state.pendingNextRoll > 0;
 
   label.textContent = bonusActive ? 'ROLLING... (BONUS!)' : 'ROLLING...';
   bar.style.transition = 'none';
@@ -917,7 +976,8 @@ function doRoll(){
     }
     renderAuraOnStage(result, bonusActive ? 'BONUS ROLL — YOU GOT' : 'YOU GOT');
     state._holdUntil = Date.now() + 1800; // keep showing the actual roll result briefly before equipped display takes back over
-    toast('Obtained '+result.name+'!  (Owned: '+state.inventory[result.id]+' • Total: '+state.totalObtained[result.id]+')');
+    toast('Obtained '+result.name+'!  (Owned: '+state.inventory[result.id]+' • Total: '+state.totalObtained[result.id]+')'+(transcendentUsed?'  [Transcendent Potion consumed]':''));
+    if(transcendentUsed){ state.pendingNextRoll = 0; }
     updateAllCounters();
     updateBonusDisplay();
     document.getElementById('statRolls').textContent = fmt(state.rollCount);
@@ -941,6 +1001,7 @@ function updateAllCounters(){
   });
   renderTab();
   renderEquippedRow();
+  renderPotionRow();
 }
 
 function renderEquippedRow(){
@@ -953,6 +1014,27 @@ function renderEquippedRow(){
     chip.innerHTML = `<span class="${a.cls}" style="font-size:11px; text-shadow:none;">${a.name}</span>`;
     row.appendChild(chip);
   });
+}
+
+function renderPotionRow(){
+  const row = document.getElementById('potionRow');
+  if(!row) return;
+  row.innerHTML='';
+  POTION_ORDER.forEach(pid=>{
+    if(isPotionActive(pid)){
+      const secs = Math.max(0, Math.ceil((state.activePotions[pid]-Date.now())/1000));
+      const chip = document.createElement('div');
+      chip.className='potionChip';
+      chip.textContent = POTION_BY_ID[pid].name+' • '+secs+'s';
+      row.appendChild(chip);
+    }
+  });
+  if(state.pendingNextRoll>0){
+    const chip = document.createElement('div');
+    chip.className='potionChip';
+    chip.textContent = 'Transcendent Boost Ready';
+    row.appendChild(chip);
+  }
 }
 
 function toggleEquipAura(id){
@@ -1008,6 +1090,53 @@ function renderSlots(){
   r.querySelector('.gname').textContent = state.equippedRight ? GAUNTLET_BY_ID[state.equippedRight].name : 'Empty';
 }
 
+/* ===================== POTIONS LOGIC ===================== */
+function potionReqMetText(p){
+  let parts = [];
+  Object.entries(p.reqAuras||{}).forEach(([id,n])=>{
+    const have = state.inventory[id]||0;
+    const ok = have>=n;
+    parts.push(`<span class="${ok?'ok':'no'}">${AURA_BY_ID[id].name} ${have}/${n}</span>`);
+  });
+  Object.entries(p.reqPotions||{}).forEach(([id,n])=>{
+    const have = state.potionsOwned[id]||0;
+    const ok = have>=n;
+    parts.push(`<span class="${ok?'ok':'no'}">${POTION_BY_ID[id].name} ${have}/${n}</span>`);
+  });
+  return parts.join('');
+}
+function canCraftPotion(p){
+  const auraOk = Object.entries(p.reqAuras||{}).every(([id,n])=>(state.inventory[id]||0)>=n);
+  const potOk = Object.entries(p.reqPotions||{}).every(([id,n])=>(state.potionsOwned[id]||0)>=n);
+  return auraOk && potOk;
+}
+function craftPotion(pid){
+  const p = POTION_BY_ID[pid];
+  if(!canCraftPotion(p)){ toast('Missing materials for '+p.name); return; }
+  Object.entries(p.reqAuras||{}).forEach(([id,n])=>{ state.inventory[id]-=n; });
+  Object.entries(p.reqPotions||{}).forEach(([id,n])=>{ state.potionsOwned[id]-=n; });
+  state.potionsOwned[pid]++;
+  toast('Crafted '+p.name+'!');
+  updateAllCounters();
+}
+function equipPotion(pid){
+  const p = POTION_BY_ID[pid];
+  if((state.potionsOwned[pid]||0) <= 0) return;
+  state.potionsOwned[pid]--;
+  if(p.type==='timed'){
+    const base = isPotionActive(pid) ? state.activePotions[pid] : Date.now();
+    state.activePotions[pid] = base + p.duration*1000;
+    toast('Activated '+p.name+'!');
+  } else {
+    state.pendingNextRoll += p.luckPct;
+    toast(p.name+' will boost your next roll!');
+  }
+  document.getElementById('statLuck').textContent = Math.round(currentLuckMultiplier(false)*100)+'%';
+  document.getElementById('statCd').textContent = (currentCooldownMs()/1000).toFixed(1)+'s';
+  renderTab();
+  renderPotionRow();
+}
+
 /* ===================== TABS ===================== */
 let activeTab='inv';
 document.querySelectorAll('.tab').forEach(t=>{
@@ -1040,7 +1169,7 @@ function renderTab(){
       wrap.appendChild(card);
     });
     if(wrap.innerHTML==='') wrap.innerHTML = '<div style="color:var(--dim); font-size:12px; padding:10px;">No auras yet — start rolling!</div>';
-  } else {
+  } else if(activeTab==='craft'){
     CRAFT_ORDER.forEach(gid=>{
       const g = GAUNTLET_BY_ID[gid];
       const owned = state.gauntletsOwned[gid];
@@ -1061,8 +1190,51 @@ function renderTab(){
       });
       wrap.appendChild(card);
     });
+  } else if(activeTab==='potion'){
+    // Active potions box
+    const activeBox = document.createElement('div');
+    activeBox.className='activePotionsBox';
+    let activeRows='';
+    POTION_ORDER.forEach(pid=>{
+      if(isPotionActive(pid)){
+        const secs = Math.max(0, Math.ceil((state.activePotions[pid]-Date.now())/1000));
+        activeRows += `<div class="row"><span>${POTION_BY_ID[pid].name}</span><span>${secs}s left</span></div>`;
+      }
+    });
+    if(state.pendingNextRoll>0){
+      activeRows += `<div class="row"><span>Transcendent Boost</span><span>+${fmt(state.pendingNextRoll)}% next roll</span></div>`;
+    }
+    activeBox.innerHTML = `<div class="title">ACTIVE POTIONS</div>` + (activeRows || `<div class="empty">No active potions.</div>`);
+    wrap.appendChild(activeBox);
+
+    POTION_ORDER.forEach(pid=>{
+      const p = POTION_BY_ID[pid];
+      const owned = state.potionsOwned[pid];
+      const card = document.createElement('div');
+      card.className='craftCard';
+      const active = isPotionActive(pid);
+      const secsLeft = active ? Math.max(0, Math.ceil((state.activePotions[pid]-Date.now())/1000)) : 0;
+      card.innerHTML = `
+        <div class="top"><span class="gn">${p.name}</span><span class="boost">${p.desc}</span></div>
+        <div class="reqs">${potionReqMetText(p)}</div>
+        <button class="craftBtn" ${canCraftPotion(p)?'':'disabled'}>Craft${owned?(' (Owned: '+owned+')'):''}</button>
+        <div style="display:flex; gap:6px; margin-top:6px;">
+          <button class="miniBtn eqPotion" ${owned>0?'':'disabled'}>${p.type==='timed' ? 'Equip / Activate' : 'Equip for Next Roll'}</button>
+        </div>
+        ${active ? `<div class="potionTimer">Active — ${secsLeft}s remaining</div>` : ''}
+      `;
+      card.querySelector('.craftBtn').addEventListener('click', ()=>craftPotion(pid));
+      card.querySelector('.eqPotion').addEventListener('click', ()=>equipPotion(pid));
+      wrap.appendChild(card);
+    });
   }
 }
+
+/* tick potion timers every second so countdowns + buffs stay accurate */
+setInterval(()=>{
+  if(activeTab==='potion') renderTab();
+  renderPotionRow();
+}, 1000);
 
 /* ===================== EVENTS ===================== */
 document.getElementById('rollBtn').addEventListener('click', doRoll);
@@ -1076,7 +1248,7 @@ document.getElementById('autoBtn').addEventListener('click', ()=>{
 /* ===================== EXPORT / IMPORT SAVE ===================== */
 function buildSavePayload(){
   return {
-    v:1,
+    v:2,
     rollCount: state.rollCount,
     inventory: state.inventory,
     totalObtained: state.totalObtained,
@@ -1084,6 +1256,9 @@ function buildSavePayload(){
     equippedLeft: state.equippedLeft,
     equippedRight: state.equippedRight,
     equippedAuras: Array.from(state.equippedAuras),
+    potionsOwned: state.potionsOwned,
+    activePotions: state.activePotions,
+    pendingNextRoll: state.pendingNextRoll,
   };
 }
 function encodeSave(obj){
@@ -1114,6 +1289,11 @@ function applySave(data){
   GAUNTLET_LIST.forEach(g=>{
     state.gauntletsOwned[g.id] = (data.gauntletsOwned && data.gauntletsOwned[g.id]) || 0;
   });
+  POTIONS.forEach(p=>{
+    state.potionsOwned[p.id] = (data.potionsOwned && data.potionsOwned[p.id]) || 0;
+  });
+  state.activePotions = data.activePotions || {};
+  state.pendingNextRoll = data.pendingNextRoll || 0;
   state.equippedLeft = data.equippedLeft || null;
   state.equippedRight = data.equippedRight || null;
   state.equippedAuras = new Set(data.equippedAuras || []);

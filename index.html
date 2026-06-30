@@ -717,16 +717,21 @@ function isPotionActive(pid){
 }
 
 function currentLuckMultiplier(bonusActive){
+  // Gauntlet luck + Lucky Potion luck stack together and get scaled by the bonus roll multiplier.
   let pct = 0;
   [state.equippedLeft, state.equippedRight].forEach(gid=>{
     if(gid){ pct += GAUNTLET_BY_ID[gid].luck || 0; }
   });
   if(isPotionActive('lucky')) pct += POTION_BY_ID.lucky.luckPct;
-  if(state.pendingNextRoll) pct += state.pendingNextRoll;
   let mult = 1 + pct/100;
   if(bonusActive){
     let starfall = (state.equippedLeft==='starfall'||state.equippedRight==='starfall');
     mult *= starfall ? 4 : 2;
+  }
+  // Transcendent Potion's flat +100,000% is added AFTER the bonus roll multiplier,
+  // so it does not get doubled/quadrupled by a bonus roll — it only stacks with other potions' luck.
+  if(state.pendingNextRoll){
+    mult += state.pendingNextRoll/100;
   }
   return mult;
 }

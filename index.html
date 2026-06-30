@@ -2,729 +2,1012 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Fatespin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chromas RNG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Cinzel:wght@600;800&family=Cinzel+Decorative:wght@700;900&family=Creepster&family=Bungee&family=Pirata+One&family=Caveat:wght@700&family=Press+Start+2P&family=Special+Elite&display=swap" rel="stylesheet">
 <style>
 :root{
-  --void:#0a0612;
-  --void2:#120a1f;
-  --panel:#171025;
-  --panel2:#1d1530;
-  --gold:#f0c34a;
-  --gold2:#fff3cf;
-  --violet:#8b5cf6;
-  --pink:#e879f9;
-  --text:#e9e2f7;
-  --dim:#8d82a8;
-  --line:#2c1f47;
+  --bg-0:#05050a;
+  --bg-1:#0b0c18;
+  --bg-2:#11132a;
+  --panel:#13152a;
+  --panel-edge:#272a52;
+  --accent:#7c5cff;
+  --accent-2:#37e2ff;
+  --text:#e9e9f7;
+  --dim:#8a8db0;
+  --good:#43e08a;
+  --bad:#ff5c7a;
 }
 *{box-sizing:border-box;}
-html,body{
-  margin:0;height:100%;overflow:hidden;
-  background:var(--void);
-  font-family:'Trebuchet MS',sans-serif;
-  color:var(--text);
-}
+html,body{height:100%;}
 body{
+  margin:0;
   background:
-    radial-gradient(circle at 15% 10%, rgba(139,92,246,.18), transparent 40%),
-    radial-gradient(circle at 85% 90%, rgba(232,121,249,.13), transparent 45%),
-    radial-gradient(circle at 50% 50%, rgba(240,195,74,.05), transparent 60%),
-    var(--void);
+    radial-gradient(ellipse 1200px 700px at 20% -10%, #1c1340 0%, transparent 60%),
+    radial-gradient(ellipse 1000px 800px at 100% 10%, #0c2440 0%, transparent 55%),
+    linear-gradient(180deg, var(--bg-0), var(--bg-1) 40%, var(--bg-0));
+  color:var(--text);
+  font-family:'Orbitron', sans-serif;
+  overflow-x:hidden;
+  min-height:100vh;
 }
-#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
-#app{
-  position:relative;z-index:1;
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-thumb{background:var(--panel-edge);border-radius:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+
+.app{
   display:grid;
-  grid-template-columns: 1.55fr 1fr;
-  grid-template-rows: 100vh;
-  height:100vh;
-  gap:10px;
-  padding:10px;
+  grid-template-columns: 300px 1fr 340px;
+  grid-template-rows: auto 1fr;
+  gap:14px;
+  padding:16px;
+  min-height:100vh;
 }
-.col{display:flex;flex-direction:column;gap:8px;min-height:0;}
-.panel{
-  background:linear-gradient(160deg,var(--panel),var(--panel2));
-  border:1px solid var(--line);
+@media (max-width: 980px) and (orientation:landscape){
+  .app{grid-template-columns: 240px 1fr 280px;}
+  .headerStats{gap:14px;}
+}
+
+/* ===== HEADER ===== */
+.header{
+  grid-column:1 / -1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 22px;
+  background:linear-gradient(180deg, rgba(124,92,255,.10), rgba(124,92,255,.02));
+  border:1px solid var(--panel-edge);
   border-radius:14px;
-  padding:10px 12px;
-  box-shadow:0 0 0 1px rgba(255,255,255,.02) inset, 0 8px 24px rgba(0,0,0,.35);
+  position:relative;
+  overflow:hidden;
 }
-h1.logo{
-  margin:0;font-size:26px;letter-spacing:3px;text-align:center;
-  font-family:Georgia,'Times New Roman',serif;
-  background:linear-gradient(90deg,var(--gold2),var(--gold),var(--pink));
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  text-shadow:0 0 18px rgba(240,195,74,.25);
+.header::before{
+  content:"";
+  position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(90deg, rgba(124,92,255,.05) 0 1px, transparent 1px 38px);
+  pointer-events:none;
 }
-.subtitle{text-align:center;color:var(--dim);font-size:10px;letter-spacing:2px;margin-top:-4px;text-transform:uppercase;}
+.logo{
+  font-family:'Bungee', cursive;
+  font-weight:400;
+  font-size:30px;
+  letter-spacing:3px;
+  background:linear-gradient(90deg,red,orange,yellow,green,cyan,blue,violet,red);
+  background-size:300% auto;
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  animation:shine 3s linear infinite;
+  text-shadow:0 0 30px rgba(124,92,255,.25);
+}
+@keyframes shine{ to{ background-position:300% center; } }
 
-/* TOP STATS */
-.statbar{display:flex;justify-content:space-between;align-items:center;padding:6px 14px;}
-.stat{display:flex;flex-direction:column;align-items:center;flex:1;}
-.stat .v{font-size:14px;font-weight:bold;color:var(--gold2);white-space:nowrap;}
-.stat .l{font-size:8.5px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;}
-.statdiv{width:1px;height:26px;background:var(--line);}
-
-/* ROLL AREA */
-.rollzone{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  position:relative;min-height:0;gap:10px;
+.headerStats{
+  display:flex;
+  gap:26px;
+  font-size:12px;
+  color:var(--dim);
+  z-index:1;
 }
-#resultStage{
-  width:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  position:relative;min-height:0;
-}
-.bigResult{
-  text-align:center;
-  animation:popin .35s cubic-bezier(.2,1.4,.4,1);
-}
-@keyframes popin{0%{transform:scale(.3) rotate(-8deg);opacity:0;}100%{transform:scale(1) rotate(0);opacity:1;}}
-.bigResult .emoji{font-size:90px;display:block;filter:drop-shadow(0 0 26px currentColor);}
-.bigResult .name{font-size:32px;font-weight:bold;letter-spacing:1.5px;margin-top:4px;}
-.bigResult .coins{font-size:18px;color:var(--gold2);margin-top:4px;}
-.itemPopups{position:absolute;top:6px;left:0;right:0;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;}
-.itemPop{
-  background:rgba(20,12,35,.85);border:1px solid var(--line);border-radius:10px;
-  padding:4px 10px;font-size:12px;display:flex;align-items:center;gap:5px;
-  animation:popin .3s ease;box-shadow:0 0 12px rgba(232,121,249,.25);
+.headerStats b{
+  display:block;
+  font-size:16px;
+  color:var(--text);
+  font-family:'Orbitron';
 }
 
-#rollBtn{
-  width:200px;height:64px;border-radius:18px;border:none;cursor:pointer;
-  font-size:18px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;
-  background:linear-gradient(160deg,var(--gold),#caa233);
-  color:#241405;
-  box-shadow:0 0 0 1px rgba(255,255,255,.25) inset, 0 6px 0 #7a5b16, 0 10px 22px rgba(240,195,74,.35);
-  transition:transform .08s, box-shadow .08s;
-  position:relative;overflow:hidden;
+/* ===== PANEL GENERIC ===== */
+.panel{
+  background:linear-gradient(180deg, var(--panel), #0e0f20);
+  border:1px solid var(--panel-edge);
+  border-radius:14px;
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
 }
-#rollBtn:active{transform:translateY(4px);box-shadow:0 0 0 1px rgba(255,255,255,.25) inset, 0 2px 0 #7a5b16;}
-#rollBtn:disabled{filter:grayscale(.6) brightness(.7);cursor:not-allowed;}
-#rollBtn .sheen{
-  position:absolute;top:0;left:-60%;width:40%;height:100%;
-  background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);
-  animation:sheen 2.6s linear infinite;
+.panelTitle{
+  font-size:12px;
+  letter-spacing:2px;
+  color:var(--accent-2);
+  text-transform:uppercase;
+  font-weight:700;
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
 }
-@keyframes sheen{0%{left:-60%;}100%{left:140%;}}
-#cooldownBar{width:200px;height:4px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:-2px;}
-#cooldownFill{height:100%;width:0%;background:linear-gradient(90deg,var(--violet),var(--pink));transition:width linear;}
-
-.luckline{display:flex;gap:10px;justify-content:center;font-size:11px;color:var(--dim);flex-wrap:wrap;}
-.luckline b{color:var(--gold2);}
-.passivebadges{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;min-height:20px;}
-.pbadge{font-size:10px;padding:2px 8px;border-radius:20px;border:1px solid var(--violet);color:var(--pink);background:rgba(139,92,246,.12);}
-.pbadge.off{opacity:.35;border-color:var(--line);color:var(--dim);}
-
-/* LOG */
-#log{
-  flex:1;overflow-y:auto;font-size:11px;display:flex;flex-direction:column-reverse;gap:3px;padding-right:2px;
+.panelTitle::after{
+  content:"";
+  height:1px;
+  flex:1;
+  background:linear-gradient(90deg, var(--panel-edge), transparent);
 }
-#log::-webkit-scrollbar{width:5px;}
-#log::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
-.logrow{display:flex;justify-content:space-between;gap:6px;padding:1px 6px;border-radius:5px;background:rgba(255,255,255,.02);font-size:9.5px;line-height:1.4;}
-.logrow .t{color:var(--dim);}
 
-/* RIGHT COLUMN: rarity table + inventory + gauntlets, tabs */
-.tabs{display:flex;gap:4px;}
-.tab{
-  flex:1;text-align:center;padding:6px 4px;font-size:11px;border-radius:8px;cursor:pointer;
-  background:rgba(255,255,255,.03);color:var(--dim);border:1px solid transparent;letter-spacing:.5px;
+/* ===== LEFT: ODDS LIST ===== */
+.oddsList{
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  padding-right:4px;
+  max-height:calc(100vh - 230px);
 }
-.tab.active{background:rgba(240,195,74,.13);color:var(--gold2);border-color:var(--gold);}
-.tabpanel{flex:1;min-height:0;overflow-y:auto;display:none;}
-.tabpanel.active{display:block;}
-.tabpanel::-webkit-scrollbar{width:5px;}
-.tabpanel::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
-
-.rarityRow{display:flex;align-items:center;justify-content:space-between;padding:4px 8px;border-radius:8px;margin-bottom:3px;font-size:11px;}
-.rarityRow .rn{font-weight:bold;}
-.rarityRow .rc{color:var(--dim);font-size:9.5px;}
-.rarityRow .rv{color:var(--gold2);font-size:10px;}
-
-.itemCard{
-  display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:9px;margin-bottom:4px;
-  background:rgba(255,255,255,.03);border:1px solid var(--line);font-size:11px;
-}
-.itemCard .ic{font-size:18px;width:22px;text-align:center;}
-.itemCard .iname{font-weight:bold;flex:1;}
-.itemCard .icount{color:var(--gold2);font-size:12px;}
-.itemCard .ichance{color:var(--dim);font-size:9px;}
-
-.gcard{
-  border:1px solid var(--line);border-radius:10px;padding:7px 9px;margin-bottom:5px;font-size:11px;
+.oddsRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:7px 10px;
+  border-radius:8px;
   background:rgba(255,255,255,.02);
+  border:1px solid rgba(255,255,255,.04);
+  font-size:11px;
 }
-.gcard .gh{display:flex;justify-content:space-between;align-items:center;}
-.gcard .gname{font-weight:bold;font-size:12px;}
-.gcard .gluck{font-size:10px;}
-.gcard .greq{color:var(--dim);font-size:9.5px;margin-top:2px;}
-.gcard .gpass{font-size:9.5px;margin-top:1px;}
-.gcard button{
-  margin-top:5px;width:100%;padding:4px;border-radius:7px;border:1px solid var(--line);
-  background:rgba(255,255,255,.06);color:var(--gold2);font-size:10px;cursor:pointer;letter-spacing:.5px;
+.oddsRow .nm{font-weight:700; font-size:12px;}
+.oddsRow .pc{color:var(--dim); font-variant-numeric:tabular-nums;}
+.oddsRow .ct{
+  font-size:10px;
+  background:rgba(255,255,255,.06);
+  padding:1px 6px;
+  border-radius:20px;
+  color:var(--dim);
 }
-.gcard button:disabled{opacity:.4;cursor:not-allowed;}
 
-#toastWrap{position:fixed;top:10px;right:14px;display:flex;flex-direction:column;gap:6px;z-index:50;}
+/* ===== CENTER STAGE ===== */
+.center{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  min-height:0;
+}
+.stageWrap{
+  position:relative;
+  flex:1;
+  border-radius:18px;
+  border:1px solid var(--panel-edge);
+  background:
+    radial-gradient(circle at 50% 40%, #161830 0%, #08080f 75%);
+  overflow:hidden;
+  min-height:340px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.stageGrid{
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(rgba(124,92,255,.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,92,255,.06) 1px, transparent 1px);
+  background-size:34px 34px;
+  mask-image:radial-gradient(circle at center, black, transparent 75%);
+  pointer-events:none;
+}
+.fxLayer{
+  position:absolute; inset:0;
+  pointer-events:none;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.bgFx{
+  position:absolute; inset:0;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .4s ease;
+}
+.bgFx.show{opacity:1;}
+
+.auraText{
+  position:relative;
+  z-index:5;
+  text-align:center;
+  padding:20px;
+  user-select:none;
+  white-space:nowrap;
+}
+.auraSub{
+  display:block;
+  font-family:'Orbitron';
+  font-size:11px;
+  letter-spacing:4px;
+  color:var(--dim);
+  margin-bottom:8px;
+  text-transform:uppercase;
+}
+.equippedRow{
+  position:absolute;
+  bottom:10px; left:0; right:0;
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  flex-wrap:wrap;
+  z-index:6;
+  pointer-events:none;
+}
+.equippedChip{
+  font-size:11px;
+  padding:3px 10px;
+  border-radius:20px;
+  background:rgba(0,0,0,.4);
+  backdrop-filter:blur(2px);
+  border:1px solid rgba(255,255,255,.15);
+}
+
+/* particle */
+.particle{
+  position:absolute;
+  pointer-events:none;
+  will-change:transform, opacity;
+}
+
+/* ===== CONTROLS ===== */
+.controls{
+  display:flex;
+  gap:12px;
+  align-items:stretch;
+}
+.rollBtn{
+  flex:1;
+  border:none;
+  cursor:pointer;
+  border-radius:14px;
+  font-family:'Orbitron';
+  font-weight:900;
+  font-size:20px;
+  letter-spacing:2px;
+  color:#fff;
+  background:linear-gradient(135deg, #7c5cff, #37e2ff);
+  box-shadow:0 8px 24px rgba(124,92,255,.35), inset 0 1px 0 rgba(255,255,255,.3);
+  position:relative;
+  overflow:hidden;
+  padding:16px;
+  transition:transform .08s ease, filter .2s ease;
+}
+.rollBtn:active{transform:scale(.97);}
+.rollBtn:disabled{filter:grayscale(.4) brightness(.7); cursor:not-allowed;}
+.rollBtn .barFill{
+  position:absolute; left:0; top:0; bottom:0;
+  background:rgba(255,255,255,.18);
+  width:0%;
+}
+.rollBtn span{position:relative; z-index:2;}
+
+.sideBtns{display:flex; flex-direction:column; gap:10px; width:160px;}
+.toggleBtn{
+  border:1px solid var(--panel-edge);
+  background:var(--panel);
+  color:var(--text);
+  border-radius:12px;
+  padding:10px;
+  cursor:pointer;
+  font-family:'Orbitron';
+  font-size:12px;
+  font-weight:700;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  transition:all .15s ease;
+}
+.toggleBtn.active{
+  background:linear-gradient(135deg, rgba(67,224,138,.18), rgba(67,224,138,.05));
+  border-color:var(--good);
+  color:var(--good);
+}
+.bonusBadge{
+  font-size:10px; color:var(--dim);
+}
+.bonusBadge b{color:#ffd86b;}
+
+/* ===== GAUNTLET SLOTS ===== */
+.slots{
+  display:flex;
+  gap:12px;
+}
+.slot{
+  flex:1;
+  border:1px dashed var(--panel-edge);
+  border-radius:12px;
+  padding:10px;
+  text-align:center;
+  background:rgba(255,255,255,.015);
+  cursor:pointer;
+  min-height:74px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+.slot small{color:var(--dim); font-size:9px; letter-spacing:1px;}
+.slot .gname{font-size:12px; font-weight:700; margin-top:3px;}
+.slot.filled{border-style:solid; border-color:var(--accent);}
+
+/* ===== RIGHT PANEL TABS ===== */
+.rightPanel{display:flex; flex-direction:column; min-height:0;}
+.tabs{
+  display:flex; gap:6px; margin-bottom:10px;
+}
+.tab{
+  flex:1;
+  text-align:center;
+  padding:8px 4px;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:1px;
+  border-radius:8px;
+  cursor:pointer;
+  color:var(--dim);
+  background:rgba(255,255,255,.03);
+  border:1px solid transparent;
+}
+.tab.active{
+  color:#fff;
+  background:linear-gradient(135deg, rgba(124,92,255,.3), rgba(55,226,255,.12));
+  border-color:var(--accent);
+}
+.tabContent{flex:1; overflow-y:auto; max-height:calc(100vh - 300px); padding-right:4px;}
+
+.invCard{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 10px; margin-bottom:6px;
+  border-radius:10px;
+  background:rgba(255,255,255,.02);
+  border:1px solid rgba(255,255,255,.05);
+}
+.invCard .info{display:flex; flex-direction:column;}
+.invCard .info .nm{font-size:13px; font-weight:800;}
+.invCard .info .meta{font-size:10px; color:var(--dim);}
+.miniBtn{
+  font-size:10px;
+  border:1px solid var(--panel-edge);
+  background:rgba(255,255,255,.04);
+  color:var(--text);
+  border-radius:6px;
+  padding:5px 9px;
+  cursor:pointer;
+  font-family:'Orbitron';
+  font-weight:700;
+}
+.miniBtn:hover{border-color:var(--accent);}
+.miniBtn.eq{background:linear-gradient(135deg, var(--good), #2bbf72); color:#06210f; border:none;}
+.miniBtn:disabled{opacity:.35; cursor:not-allowed;}
+
+.craftCard{
+  padding:10px; margin-bottom:10px; border-radius:12px;
+  background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.06);
+}
+.craftCard .top{display:flex; justify-content:space-between; align-items:baseline;}
+.craftCard .gn{font-size:14px; font-weight:900;}
+.craftCard .boost{font-size:11px; color:var(--good); font-weight:700;}
+.craftCard .reqs{margin:6px 0; font-size:11px; color:var(--dim); line-height:1.6;}
+.craftCard .reqs span{display:inline-block; margin-right:8px;}
+.craftCard .reqs .ok{color:var(--good);}
+.craftCard .reqs .no{color:var(--bad);}
+.craftBtn{
+  width:100%; padding:8px; border-radius:8px; border:none;
+  background:linear-gradient(135deg, var(--accent), #5232c9);
+  color:#fff; font-family:'Orbitron'; font-weight:800; font-size:11px;
+  cursor:pointer; letter-spacing:1px;
+}
+.craftBtn:disabled{background:#2a2a3a; color:#666; cursor:not-allowed;}
+
 .toast{
-  background:rgba(20,12,35,.92);border:1px solid var(--gold);border-radius:10px;padding:8px 14px;font-size:12px;
-  box-shadow:0 0 18px rgba(240,195,74,.3);animation:popin .3s ease;
+  position:fixed; top:20px; left:50%; transform:translateX(-50%);
+  background:rgba(10,10,20,.92); border:1px solid var(--accent);
+  padding:10px 22px; border-radius:30px; font-size:13px; font-weight:700;
+  z-index:999; opacity:0; pointer-events:none; transition:all .3s ease;
+  box-shadow:0 10px 30px rgba(0,0,0,.5);
+}
+.toast.show{opacity:1; top:30px;}
+
+/* ===== AURA FONT/COLOR STYLES per rarity ===== */
+.r-common{font-family:'Orbitron'; font-weight:700; font-size:30px; color:#cfd2e6;}
+.r-rare{font-family:'Orbitron'; font-weight:700; font-size:32px; color:#5db3ff; text-shadow:0 0 16px #2d8dff;}
+.r-epic{font-family:'Orbitron'; font-weight:900; font-size:34px; color:#c084ff; text-shadow:0 0 18px #9b3bff;}
+.r-divine{font-family:'Cinzel Decorative'; font-weight:700; font-size:34px; color:#fff3b0; text-shadow:0 0 22px #ffe066;}
+.r-dizzy{font-family:'Caveat'; font-weight:700; font-size:46px; color:#c79356; text-shadow:0 0 14px #7a4a1f;}
+.r-starstrider{font-family:'Orbitron'; font-weight:700; font-size:34px; color:#eaf6ff; text-shadow:0 0 20px #9fd8ff;}
+.r-demonic{font-family:'Bungee'; font-size:34px; color:#ff3636; text-shadow:0 0 26px #ff0000;}
+.r-volcanic{font-family:'Bungee'; font-size:34px; color:#ff8a2b; text-shadow:0 0 26px #ff4500;}
+.r-zombie{font-family:'Special Elite'; font-size:32px; color:#79e35a; text-shadow:0 0 20px #2f8f1c;}
+.r-galactic{font-family:'Cinzel Decorative'; font-weight:700; font-size:34px; color:#b07bff; text-shadow:0 0 26px #7c2bff;}
+.r-rainbow{font-family:'Pirata One'; font-size:42px; background:linear-gradient(90deg,red,orange,yellow,green,cyan,blue,violet,red); background-size:300% auto; -webkit-background-clip:text; background-clip:text; color:transparent; animation:rainbowMove .8s linear infinite;}
+@keyframes rainbowMove{ to{ background-position:300% center; } }
+.r-soulking{font-family:'Creepster'; font-size:48px; color:#f3f3f3; text-shadow:0 0 24px #888, 0 0 50px #333;}
+.r-destroyer{font-family:'Bungee'; font-size:58px; color:#ff1a1a; text-shadow:0 0 30px #ff0000, 0 0 70px #960000;}
+.r-crucified{font-family:'Cinzel Decorative'; font-weight:900; font-size:64px; color:#ffe9b0; text-shadow:0 0 40px #ffcf6b, 0 0 90px #ffb347;}
+.r-torment{font-family:'Special Elite'; font-size:36px; color:#999; text-shadow:0 0 10px #000;}
+.r-blackhole{font-family:'Orbitron'; font-weight:900; font-size:40px; color:#ffae42; text-shadow:0 0 30px #ff7b00;}
+.r-starlord{font-family:'Orbitron'; font-weight:900; font-size:40px; color:#7ad8ff; text-shadow:0 0 30px #2bb2ff;}
+.r-hades{font-family:'Cinzel Decorative'; font-weight:900; font-size:42px; color:#7dffb0; text-shadow:0 0 30px #28ff8f, 0 0 70px #0a8a3f;}
+
+.moveText{ animation:movex 1.6s ease-in-out infinite alternate; display:inline-block;}
+@keyframes movex{ from{transform:translateX(-40px) rotate(-1deg);} to{transform:translateX(40px) rotate(1deg);} }
+
+.glitch{ animation: glitchAnim .15s infinite; }
+@keyframes glitchAnim{
+  0%{ transform:translate(0,0); opacity:1;}
+  20%{ transform:translate(-3px,2px); opacity:.8;}
+  40%{ transform:translate(3px,-2px); opacity:1;}
+  60%{ transform:translate(-2px,-1px); opacity:.7;}
+  80%{ transform:translate(2px,1px); opacity:1;}
+  100%{ transform:translate(0,0); opacity:1;}
+}
+
+.bgRadial{ animation:spin 14s linear infinite; }
+@keyframes spin{ to{transform:rotate(360deg);} }
+.bgPulse{ animation:pulse 2.4s ease-in-out infinite; }
+@keyframes pulse{ 0%,100%{opacity:.5;} 50%{opacity:1;} }
+
+.footerNote{font-size:10px; color:var(--dim); text-align:center; margin-top:6px;}
+
+/* ===== FORCE LANDSCAPE ===== */
+.rotateOverlay{
+  display:none;
+  position:fixed; inset:0; z-index:9999;
+  background:radial-gradient(ellipse at center, #14102b, #05050a);
+  color:#fff;
+  flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; gap:14px; padding:30px;
+}
+.rotateOverlay .icon{font-size:54px; animation:rotateHint 1.6s ease-in-out infinite;}
+@keyframes rotateHint{ 0%,100%{transform:rotate(0deg);} 50%{transform:rotate(90deg);} }
+.rotateOverlay h2{font-family:'Cinzel Decorative'; margin:0; font-size:20px; letter-spacing:2px; color:#9d7bff;}
+.rotateOverlay p{margin:0; font-size:12px; color:var(--dim); max-width:280px;}
+@media (orientation:portrait) and (max-width:900px){
+  .rotateOverlay{display:flex;}
+  .app{display:none;}
 }
 </style>
 </head>
 <body>
-<canvas id="stars"></canvas>
-<div id="toastWrap"></div>
 
-<div id="app">
-
-  <!-- LEFT: Roll column -->
-  <div class="col">
-    <div class="panel" style="padding:10px 12px 6px;">
-      <h1 class="logo">✦ FATESPIN ✦</h1>
-    </div>
-
-    <div class="panel statbar">
-      <div class="stat"><div class="v" id="statCoins">0</div><div class="l">Coins</div></div>
-      <div class="statdiv"></div>
-      <div class="stat"><div class="v" id="statRolls">0</div><div class="l">Rolls</div></div>
-      <div class="statdiv"></div>
-      <div class="stat"><div class="v" id="statLuck">x1.00</div><div class="l">Luck</div></div>
-      <div class="statdiv"></div>
-      <div class="stat"><div class="v" id="statItemMult">x1</div><div class="l">Item Chance</div></div>
-      <div class="statdiv"></div>
-      <div class="stat"><div class="v" id="statHighest">—</div><div class="l">Highest Rarity</div></div>
-    </div>
-
-    <div class="panel rollzone">
-      <div id="resultStage">
-        <div class="itemPopups" id="itemPopups"></div>
-        <div class="bigResult" id="bigResult">
-          <span class="emoji">🌀</span>
-          <div class="name" style="color:var(--dim)">Awaiting your fate...</div>
-        </div>
-      </div>
-      <div class="passivebadges" id="passiveBadges"></div>
-      <div class="luckline" id="luckLine"></div>
-      <button id="rollBtn"><span class="sheen"></span><span id="rollBtnLabel">ROLL</span></button>
-      <div id="cooldownBar"><div id="cooldownFill"></div></div>
-    </div>
-
-    <div class="panel" style="flex:0 0 26%;display:flex;flex-direction:column;min-height:0;">
-      <div style="font-size:10px;color:var(--dim);letter-spacing:1px;margin-bottom:4px;">RECENT FATES</div>
-      <div id="log"></div>
-    </div>
-  </div>
-
-  <!-- RIGHT: Info column -->
-  <div class="col">
-    <div class="panel" style="flex:1;display:flex;flex-direction:column;min-height:0;">
-      <div class="tabs">
-        <div class="tab active" data-tab="rarities">Rarities</div>
-        <div class="tab" data-tab="items">Items</div>
-        <div class="tab" data-tab="gauntlets">Gauntlets</div>
-      </div>
-      <div class="tabpanel active" id="tab-rarities"></div>
-      <div class="tabpanel" id="tab-items"></div>
-      <div class="tabpanel" id="tab-gauntlets"></div>
-    </div>
-  </div>
-
+<div class="rotateOverlay">
+  <div class="icon">⟳</div>
+  <h2>ROTATE YOUR DEVICE</h2>
+  <p>Chromas RNG is a landscape-only experience. Turn your phone sideways to keep rolling.</p>
 </div>
 
+<div class="app">
+  <div class="header">
+    <div class="logo">CHROMAS RNG</div>
+    <div class="headerStats">
+      <div>Rolls<b id="statRolls">0</b></div>
+      <div>Luck<b id="statLuck">100%</b></div>
+      <div>Best Found<b id="statBest">—</b></div>
+      <div>Cooldown<b id="statCd">1.0s</b></div>
+    </div>
+  </div>
+
+  <!-- LEFT: ODDS -->
+  <div class="panel">
+    <div class="panelTitle">Aura Odds</div>
+    <div class="oddsList" id="oddsList"></div>
+  </div>
+
+  <!-- CENTER: STAGE -->
+  <div class="center">
+    <div class="stageWrap" id="stageWrap">
+      <div class="stageGrid"></div>
+      <div class="fxLayer" id="bgFxLayer"></div>
+      <div class="fxLayer" id="particleLayer"></div>
+      <div class="auraText" id="auraText">
+        <span class="auraSub">Press Roll to Begin</span>
+        <span class="r-common" id="auraMain">— — —</span>
+      </div>
+      <div class="equippedRow" id="equippedRow"></div>
+    </div>
+
+    <div class="controls">
+      <button class="rollBtn" id="rollBtn"><div class="barFill" id="rollBar"></div><span id="rollLabel">ROLL</span></button>
+      <div class="sideBtns">
+        <button class="toggleBtn" id="autoBtn">⟳ AUTO ROLL<span class="bonusBadge" id="autoState">OFF</span></button>
+        <div class="toggleBtn" style="cursor:default;">
+          BONUS IN <span class="bonusBadge"><b id="bonusCount">10</b> rolls</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="slots">
+      <div class="slot" id="slotLeft"><small>LEFT GAUNTLET</small><div class="gname">Empty</div></div>
+      <div class="slot" id="slotRight"><small>RIGHT GAUNTLET</small><div class="gname">Empty</div></div>
+    </div>
+    <div class="footerNote">Progress is kept only for this session — it resets if you reload the page.</div>
+  </div>
+
+  <!-- RIGHT: TABS -->
+  <div class="panel rightPanel">
+    <div class="tabs">
+      <div class="tab active" data-tab="inv">Inventory</div>
+      <div class="tab" data-tab="craft">Gauntlets</div>
+    </div>
+    <div class="tabContent" id="tabContent"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-/* ============== STARFIELD BACKGROUND ============== */
-const cv=document.getElementById('stars');
-const ctx=cv.getContext('2d');
-function resize(){cv.width=innerWidth;cv.height=innerHeight;}
-resize();window.addEventListener('resize',resize);
-let starList=[];
-for(let i=0;i<140;i++){starList.push({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.4+.2,s:Math.random()*.02+.003,p:Math.random()*6.28});}
-function drawStars(){
-  ctx.clearRect(0,0,cv.width,cv.height);
-  for(const s of starList){
-    s.p+=s.s;
-    const a=.35+.65*Math.abs(Math.sin(s.p));
-    ctx.beginPath();
-    ctx.fillStyle=`rgba(230,220,255,${a})`;
-    ctx.arc(s.x,s.y,s.r,0,6.28);
-    ctx.fill();
-  }
-  requestAnimationFrame(drawStars);
-}
-drawStars();
-
-/* ============== DATA: RARITIES ============== */
-const RARITIES = [
-  {name:"Common",     denom:2,           coins:10,          color:"#cfd3da", emoji:"🪙"},
-  {name:"Uncommon",   denom:4,           coins:25,          color:"#7fe07f", emoji:"🍃"},
-  {name:"Rare",       denom:10,          coins:75,          color:"#5ab4ff", emoji:"💧"},
-  {name:"Epic",       denom:25,          coins:200,         color:"#a06bff", emoji:"🔮"},
-  {name:"Mythic",     denom:75,          coins:600,         color:"#e066ff", emoji:"🌸"},
-  {name:"Legendary",  denom:200,         coins:2000,        color:"#ff9d3d", emoji:"🔥"},
-  {name:"Ancient",    denom:600,         coins:7500,        color:"#caa15a", emoji:"🏺"},
-  {name:"Celestial",  denom:2000,        coins:25000,       color:"#7ee8ff", emoji:"🌌"},
-  {name:"Divine",     denom:7500,        coins:100000,      color:"#fff39e", emoji:"✨"},
-  {name:"Ethereal",   denom:25000,       coins:400000,      color:"#cdfff9", emoji:"👻"},
-  {name:"Cosmic",     denom:100000,      coins:1500000,     color:"#b388ff", emoji:"🪐"},
-  {name:"Stellar",    denom:250000,      coins:3000000,     color:"#ffd66b", emoji:"🌟"},
-  {name:"Galactic",   denom:500000,      coins:7000000,     color:"#ff7ad9", emoji:"🌠"},
-  {name:"Transcendent",denom:2000000,    coins:30000000,    color:"#9bffb0", emoji:"🧬"},
-  {name:"Omnipotent", denom:10000000,    coins:150000000,   color:"#ffffff", emoji:"⚡"},
-  {name:"Primordial", denom:50000000,    coins:500000000,   color:"#ff4d4d", emoji:"🌋"},
-  {name:"Genesis",    denom:100000000,   coins:1000000000,  color:"#ffe6a8", emoji:"👑"},
-].reverse(); // rarest first for rolling logic, we'll reverse back for display
-
-/* ============== DATA: ITEMS ============== */
-// "common group" items - boosted only by luck, not by item-chance multipliers
-// "rare group" items (Gear and above) - boosted by luck AND item-chance multipliers
-const ITEMS_COMMON = [
-  {key:"clover",   name:"Clover",        emoji:"🍀", denom:1,     color:"#7fe07f", guaranteed:true},
-  {key:"solstice", name:"Solstice",      emoji:"☀️", denom:5,     color:"#ffb84d"},
-  {key:"crescent", name:"Crescent Moon", emoji:"🌙", denom:5,     color:"#cfd6ff"},
-  {key:"snowflake",name:"Snowflake",     emoji:"❄️", denom:30,    color:"#bdf2ff"},
+/* ===================== DATA ===================== */
+// rarest -> most common
+const AURAS = [
+  {id:'hades', name:'Hades', denom:200000000, cls:'r-hades', fx:'hades', big:false, bg:'hadesBg'},
+  {id:'blackhole', name:'Blackhole', denom:100000000, cls:'r-blackhole', fx:'blackhole', big:false, bg:'blackholeBg'},
+  {id:'starlord', name:'Starlord', denom:99999999, cls:'r-starlord', fx:'starlord', big:false, bg:'starlordBg'},
+  {id:'torment', name:'Torment', denom:50000000, cls:'r-torment', fx:'torment', big:false, bg:'tormentBg', noMove:true, dark:true},
+  {id:'crucified', name:'The Crucified', denom:49999999, cls:'r-crucified', fx:'crucified', big:true},
+  {id:'destroyer', name:'Destroyer', denom:5000000, cls:'r-destroyer', fx:'destroyer', big:true},
+  {id:'soulking', name:'Soul King', denom:850000, cls:'r-soulking', fx:'soulking', big:true},
+  {id:'rainbow', name:'Rainbow', denom:99999, cls:'r-rainbow', fx:'rainbow'},
+  {id:'galactic', name:'Galactic', denom:30000, cls:'r-galactic', fx:'galactic'},
+  {id:'zombie', name:'Zombie', denom:10000, cls:'r-zombie', fx:'zombie'},
+  {id:'volcanic', name:'Volcanic', denom:3000, cls:'r-volcanic', fx:'volcanic'},
+  {id:'demonic', name:'Demonic', denom:1111, cls:'r-demonic', fx:'demonic'},
+  {id:'starstrider', name:'Starstrider', denom:200, cls:'r-starstrider', fx:'starstrider'},
+  {id:'dizzy', name:'Dizzy', denom:60, cls:'r-dizzy', fx:'dizzy'},
+  {id:'divine', name:'Divine', denom:15, cls:'r-divine', fx:'divine'},
+  {id:'epic', name:'Epic', denom:8, cls:'r-epic', fx:'epic'},
+  {id:'rare', name:'Rare', denom:4, cls:'r-rare', fx:'rare'},
+  {id:'common', name:'Common', denom:2, cls:'r-common', fx:'none'},
 ];
-const ITEMS_RARE = [
-  {key:"gear",        name:"Gear",          emoji:"⚙️", denom:1000,    color:"#c9b37a"},
-  {key:"oscarheart",  name:"Oscar Heart",   emoji:"❤️‍🔥",denom:25000,  color:"#ff4d6d"},
-  {key:"oscaramulet", name:"Oscar Amulet",  emoji:"📿", denom:50000,   color:"#ffd700"},
-  {key:"genesiscore", name:"Genesis Core",  emoji:"🔆", denom:100000,  color:"#fff3cf"},
-  {key:"gargantuan",  name:"Gargantuan",    emoji:"🕳️", denom:500000,  color:"#7a2dff"},
-];
-const ALL_ITEMS = [...ITEMS_COMMON, ...ITEMS_RARE];
+const AURA_BY_ID = Object.fromEntries(AURAS.map(a=>[a.id,a]));
 
-/* ============== DATA: GAUNTLETS ============== */
 const GAUNTLETS = [
-  {
-    key:"lucky", name:"Lucky Gauntlets", emoji:"🍀🧤", luck:50, color:"#5ee06b",
-    req:{clover:5, coins:100},
-    passive:"None — pure luck boost.",
-  },
-  {
-    key:"solar", name:"Solar Gauntlets", emoji:"☀️🧤", luck:100, color:"#ffb13d",
-    req:{solstice:5, coins:10000},
-    passive:"Solar Rays: 5x Luck for 5 rolls every 10 rolls.",
-  },
-  {
-    key:"lunar", name:"Lunar Gauntlets", emoji:"🌙🧤", luck:100, color:"#8fb4ff",
-    req:{crescent:5, coins:10000},
-    passive:"Lunar Surge: 10x Luck for 1 roll every 10 rolls.",
-  },
-  {
-    key:"eclipse", name:"Eclipse Gauntlets", emoji:"🌑🧤", luck:300, color:"#6b5dff",
-    req:{gauntlets:["solar","lunar"]},
-    passive:"Solar Rays + Lunar Surge combined.",
-  },
-  {
-    key:"frosty", name:"Frosty Gauntlets", emoji:"❄️🧤", luck:350, color:"#5fd8ff",
-    req:{snowflake:5, coins:250000},
-    passive:"Permanent 2x Item Chance (Gear-tier and above).",
-  },
-  {
-    key:"steampunk", name:"Steampunk Gauntlets", emoji:"⚙️🧤", luck:500, color:"#c98a3e",
-    req:{clover:1000, gear:2, coins:1000000},
-    passive:"Shocked Gears: 9x Luck for 10 rolls every 12 rolls.",
-  },
-  {
-    key:"oscar", name:"Great Gauntlets of Oscar", emoji:"❤️🧤", luck:2500, color:"#ff4d6d",
-    req:{oscarheart:1, oscaramulet:1, clover:10000, coins:70000000},
-    passive:"Permanent 5x Item Chance (Gear-tier and above).",
-  },
-  {
-    key:"blackhole", name:"Blackhole Gauntlets", emoji:"🕳️🧤", luck:5000, color:"#a855f7",
-    req:{gargantuan:2, coins:1000000000},
-    passive:"Gargantuan Burst: 40x Luck for 40 rolls every 25 rolls.",
-  },
-  {
-    key:"starscourge", name:"Starscourge Gauntlets", emoji:"🌠🧤", luck:9000, color:"#ffd700",
-    req:{genesiscore:3, snowflake:10000, coins:500000000},
-    passive:"Permanent 10x Item Chance (Gear-tier and above). Fates flash instantly on screen.",
-  },
+  {id:'hadesfist', name:'(reserved)'}, // placeholder unused
 ];
+// real gauntlet list, ranked by rarity/power
+const GAUNTLET_LIST = [
+  {id:'starfall', name:'Starfall Gauntlet', slot:'left-only', req:{starlord:2}, luck:0, bonusOverride:4, desc:'Bonus Roll becomes 4x luck (instead of 2x) on every 10th roll.'},
+  {id:'blackholeg', name:'Blackhole Gauntlet', slot:'right-only', req:{blackhole:1, galactic:99, rainbow:10}, luck:600, cooldown:0.7, desc:'+600% Luck, 0.7s roll cooldown.'},
+  {id:'volcanicg', name:'Volcanic Gauntlet', slot:'right-only', req:{volcanic:60, soulking:1}, luck:395, desc:'+395% Luck.'},
+  {id:'steampunk', name:'Steampunk Gauntlet', slot:'right-only', req:{rainbow:1, galactic:5, zombie:10}, luck:195, desc:'+195% Luck.'},
+  {id:'frosty', name:'Frosty Gauntlet', slot:'right-only', req:{galactic:2, starstrider:30}, luck:100, desc:'+100% Luck.'},
+  {id:'desire', name:'Desire Gauntlet', slot:'right-only', req:{divine:5, dizzy:1, demonic:1}, luck:50, desc:'+50% Luck.'},
+  {id:'lucky', name:'Lucky Gauntlet', slot:'right-only', req:{common:3}, luck:25, desc:'+25% Luck.'},
+];
+const GAUNTLET_BY_ID = Object.fromEntries(GAUNTLET_LIST.map(g=>[g.id,g]));
+// order for crafting display: most powerful first (already roughly so), but let's rank ascending by luck for clarity with starfall last special
+const CRAFT_ORDER = ['lucky','desire','frosty','steampunk','volcanicg','blackholeg','starfall'];
 
-/* ============== STATE ============== */
-let state = {
-  coins: 0,
-  rolls: 0,
-  items: {}, // key -> count
-  gauntletsOwned: [], // keys
-  equipped: null,
-  cooldown: false,
-  highestRarity: null,
-  // passive cycle trackers
-  solar:{phase:'active',count:0}, lunar:{phase:'active',count:0}, steampunk:{phase:'active',count:0}, blackhole:{phase:'active',count:0},
+/* ===================== STATE ===================== */
+const state = {
+  rollCount:0,
+  inventory:{},      // auraId -> currently owned count (consumable for crafting)
+  totalObtained:{},  // auraId -> total ever obtained
+  equippedAuras:new Set(), // ids currently "worn" showcase, stackable
+  gauntletsOwned:{}, // gauntletId -> count owned
+  equippedLeft:null,
+  equippedRight:null,
+  isRolling:false,
+  autoRoll:false,
+  bestRarityIndex: AURAS.length, // index into AURAS, lower = rarer; start beyond list
+  autoTimer:null,
 };
-ALL_ITEMS.forEach(i=>state.items[i.key]=0);
+AURAS.forEach(a=>{state.inventory[a.id]=0; state.totalObtained[a.id]=0;});
+GAUNTLET_LIST.forEach(g=>{state.gauntletsOwned[g.id]=0;});
 
-function fmt(n){
-  if(n>=1e12) return (n/1e12).toFixed(2)+"T";
-  if(n>=1e9) return (n/1e9).toFixed(2)+"B";
-  if(n>=1e6) return (n/1e6).toFixed(2)+"M";
-  if(n>=1e3) return (n/1e3).toFixed(2)+"K";
-  return Math.floor(n).toString();
-}
-function odds(denom){
-  if(denom>=1e6) return "1/"+(denom/1e6)+"M";
-  if(denom>=1e3) return "1/"+(denom/1e3)+"K";
-  return "1/"+denom;
+/* ===================== HELPERS ===================== */
+function fmt(n){ return n.toLocaleString('en-US'); }
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 1800);
 }
 
-/* ============== LUCK / PASSIVE CALCULATION ============== */
-function getGauntlet(key){ return GAUNTLETS.find(g=>g.key===key); }
-
-function getActivePassiveLuck(){
-  // returns multiplier from cyclical/temp passives of equipped gauntlet (and inherited ones for eclipse)
-  if(!state.equipped) return 1;
-  const g = getGauntlet(state.equipped);
-  let mult = 1;
-  const keysToCheck = g.key==="eclipse" ? ["solar","lunar"] : [g.key];
-  for(const k of keysToCheck){
-    if(k==="solar" && state.solar.phase==='active') mult *= 5;
-    if(k==="lunar" && state.lunar.phase==='active') mult *= 10;
-    if(k==="steampunk" && state.steampunk.phase==='active') mult *= 9;
-    if(k==="blackhole" && state.blackhole.phase==='active') mult *= 40;
+function currentLuckMultiplier(bonusActive){
+  let pct = 0;
+  [state.equippedLeft, state.equippedRight].forEach(gid=>{
+    if(gid){ pct += GAUNTLET_BY_ID[gid].luck || 0; }
+  });
+  let mult = 1 + pct/100;
+  if(bonusActive){
+    let starfall = (state.equippedLeft==='starfall'||state.equippedRight==='starfall');
+    mult *= starfall ? 4 : 2;
   }
   return mult;
 }
-
-function getBaseLuck(){
-  if(!state.equipped) return 1;
-  const g = getGauntlet(state.equipped);
-  return 1 + g.luck/100;
+function currentCooldownMs(){
+  let cd = 1.0;
+  [state.equippedLeft, state.equippedRight].forEach(gid=>{
+    if(gid && GAUNTLET_BY_ID[gid].cooldown){ cd = Math.min(cd, GAUNTLET_BY_ID[gid].cooldown); }
+  });
+  return cd*1000;
 }
 
-function getTotalLuck(){
-  return getBaseLuck() * getActivePassiveLuck();
-}
-
-function getItemChanceMult(){
-  // permanent item-chance multipliers, only active while gauntlet equipped, applies to Gear-tier+ items
-  if(!state.equipped) return 1;
-  const g = getGauntlet(state.equipped);
-  let mult = 1;
-  if(g.key==="frosty") mult *= 2;
-  if(g.key==="oscar") mult *= 5;
-  if(g.key==="starscourge") mult *= 10;
-  return mult;
-}
-
-function tickPassive(p, activeLen, gapLen){
-  p.count++;
-  if(p.phase==='active'){
-    if(p.count>=activeLen){ p.phase='cooldown'; p.count=0; }
-  } else {
-    if(p.count>=gapLen){ p.phase='active'; p.count=0; }
-  }
-}
-
-function advancePassiveCounters(){
-  // active duration, then a FULL separate cooldown count starts only once active period ends
-  tickPassive(state.solar, 5, 10);       // 5 rolls active, then 10 rolls before next activation
-  tickPassive(state.lunar, 1, 10);       // 1 roll active, then 10 rolls before next activation
-  tickPassive(state.steampunk, 10, 12);  // 10 rolls active, then 12 rolls before next activation
-  tickPassive(state.blackhole, 40, 25);  // 40 rolls active, then 25 rolls before next activation
-}
-
-/* ============== ROLL LOGIC ============== */
-function rollRarity(luck){
-  // RARITIES is reverse-sorted (rarest first)
-  for(const r of RARITIES){
-    const effDenom = Math.max(2, r.denom/luck);
-    if(Math.random() < 1/effDenom){
-      return r;
+function rollAura(luckMult){
+  for(const a of AURAS){
+    const effDenom = a.denom / luckMult;
+    if(effDenom <= 1 || Math.random() < 1/effDenom){
+      return a;
     }
   }
-  return RARITIES[RARITIES.length-1]; // common fallback
+  return AURA_BY_ID.common;
 }
 
-function rollItems(itemMult){
-  const obtained = [];
-  // rare-tier items first (rarest to least rare), boosted ONLY by item-chance multiplier (not luck)
-  const rareSorted = [...ITEMS_RARE].sort((a,b)=>b.denom-a.denom);
-  for(const it of rareSorted){
-    const effDenom = Math.max(2, it.denom/itemMult);
-    if(Math.random() < 1/effDenom){
-      obtained.push(it);
-      break; // one "other item" guaranteed slot, but let rare items take priority
+/* ===================== RENDER: ODDS LIST ===================== */
+function renderOdds(){
+  const wrap = document.getElementById('oddsList');
+  wrap.innerHTML = '';
+  AURAS.forEach(a=>{
+    const row = document.createElement('div');
+    row.className='oddsRow';
+    row.innerHTML = `<span class="nm" style="font-family:inherit;">
+        <span class="${a.cls}" style="font-size:13px; text-shadow:none; -webkit-text-fill-color:initial;">${a.name}</span>
+      </span>
+      <span class="pc">1/${fmt(a.denom)}</span>
+      <span class="ct" id="cnt_${a.id}">x0</span>`;
+    wrap.appendChild(row);
+  });
+}
+
+/* ===================== RENDER: STAGE ===================== */
+function clearLayer(el){ el.innerHTML=''; }
+
+function spawnParticles(type, count, colorSet){
+  const layer = document.getElementById('particleLayer');
+  for(let i=0;i<count;i++){
+    const p = document.createElement('div');
+    p.className='particle';
+    const ang = Math.random()*Math.PI*2;
+    const dist = 60+Math.random()*160;
+    const dur = 0.7+Math.random()*0.9;
+    const size = 10+Math.random()*16;
+    const sym = colorSet.sym[Math.floor(Math.random()*colorSet.sym.length)];
+    p.textContent = sym;
+    p.style.left='50%'; p.style.top='50%';
+    p.style.fontSize = size+'px';
+    p.style.color = colorSet.colors[Math.floor(Math.random()*colorSet.colors.length)];
+    p.style.textShadow = `0 0 10px ${colorSet.colors[0]}`;
+    p.style.transform='translate(-50%,-50%)';
+    p.style.opacity='1';
+    layer.appendChild(p);
+    const dx = Math.cos(ang)*dist, dy=Math.sin(ang)*dist;
+    p.animate([
+      {transform:'translate(-50%,-50%) scale(.3) rotate(0deg)', opacity:0},
+      {transform:`translate(calc(-50% + ${dx*0.3}px), calc(-50% + ${dy*0.3}px)) scale(1.1) rotate(90deg)`, opacity:1, offset:.25},
+      {transform:`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.6) rotate(220deg)`, opacity:0}
+    ], {duration:dur*1000, easing:'ease-out'});
+    setTimeout(()=>p.remove(), dur*1000+50);
+  }
+}
+
+function spawnSpiral(colors){
+  const layer = document.getElementById('particleLayer');
+  for(let i=0;i<14;i++){
+    const p = document.createElement('div');
+    p.className='particle';
+    p.textContent='●';
+    p.style.fontSize='8px';
+    p.style.color = colors[i%colors.length];
+    p.style.left='50%'; p.style.top='50%';
+    layer.appendChild(p);
+    const delay = i*60;
+    const dur=1200;
+    p.animate([
+      {transform:'translate(-50%,-50%) rotate(0deg) translateX(0px)', opacity:0},
+      {transform:'translate(-50%,-50%) rotate(360deg) translateX(90px)', opacity:1, offset:.5},
+      {transform:'translate(-50%,-50%) rotate(720deg) translateX(160px)', opacity:0}
+    ], {duration:dur, delay, easing:'ease-in-out'});
+    setTimeout(()=>p.remove(), dur+delay+50);
+  }
+}
+
+const FX_PRESETS = {
+  none:null,
+  rare:{sym:['✦','✧'], colors:['#5db3ff','#9fd6ff']},
+  epic:{sym:['✧','✦'], colors:['#c084ff','#9b3bff']},
+  divine:{sym:['✚','✛'], colors:['#fff3b0','#ffe066']},
+  starstrider:{sym:['★','✦'], colors:['#eaf6ff','#9fd8ff']},
+  demonic:{sym:['💥','✺'], colors:['#ff3636','#ff8a00']},
+  volcanic:{sym:['🔥','✺'], colors:['#ff8a2b','#ff4500']},
+  zombie:{sym:['☣','✚'], colors:['#79e35a','#2f8f1c']},
+  galactic:{sym:['✦','◆'], colors:['#b07bff','#7c2bff']},
+  rainbow:{sym:['✦','✧','★'], colors:['#ff0044','#ff8800','#ffee00','#22ff66','#22aaff','#aa44ff']},
+  soulking:{sym:['💀'], colors:['#ffffff','#cfcfcf']},
+  destroyer:{sym:['✖','💢'], colors:['#ff1a1a','#960000']},
+  crucified:{sym:['✝'], colors:['#ffe9b0','#ffb347']},
+  blackhole:{sym:['●','◍'], colors:['#ffae42','#ff7b00']},
+  starlord:{sym:['✦','★'], colors:['#7ad8ff','#2bb2ff']},
+  hades:{sym:['💀','☠'], colors:['#7dffb0','#28ff8f']},
+};
+
+function triggerEffect(a){
+  clearLayer(document.getElementById('particleLayer'));
+  const bgLayer = document.getElementById('bgFxLayer');
+  clearLayer(bgLayer);
+
+  // background ambient fx
+  if(a.id==='blackhole'){
+    const div = document.createElement('div');
+    div.className='bgFx show bgRadial';
+    div.style.cssText='position:absolute;inset:-20%;border-radius:50%;background:conic-gradient(from 0deg, #000 0deg, #ff7b00 40deg, #000 90deg, #1a1a1a 180deg, #ff7b00 260deg, #000 360deg);filter:blur(8px);opacity:.55;';
+    bgLayer.appendChild(div);
+  } else if(a.id==='starlord'){
+    const div = document.createElement('div');
+    div.className='bgFx show bgRadial';
+    div.style.cssText='position:absolute;inset:-30%;border-radius:50%;background:conic-gradient(from 90deg,#021024,#2bb2ff,#021024,#7ad8ff,#021024);filter:blur(14px);opacity:.5;';
+    bgLayer.appendChild(div);
+  } else if(a.id==='hades'){
+    const div = document.createElement('div');
+    div.className='bgFx show bgPulse';
+    div.style.cssText='position:absolute;inset:0;background:radial-gradient(circle at 50% 50%, rgba(40,255,143,.25), transparent 60%);';
+    bgLayer.appendChild(div);
+  } else if(a.id==='torment'){
+    const div = document.createElement('div');
+    div.className='bgFx show';
+    div.style.cssText='position:absolute;inset:0;background:repeating-linear-gradient(180deg, rgba(0,0,0,.5) 0 4px, transparent 4px 8px); opacity:.4;';
+    bgLayer.appendChild(div);
+  } else if(a.id==='galactic'){
+    const div = document.createElement('div');
+    div.className='bgFx show bgRadial';
+    div.style.cssText='position:absolute;inset:-10%;border-radius:50%;background:conic-gradient(from 0deg,#1a0930,#7c2bff,#1a0930,#b07bff,#1a0930);filter:blur(20px);opacity:.35;';
+    bgLayer.appendChild(div);
+  }
+
+  if(a.fx==='dizzy'){
+    spawnSpiral(['#c79356','#7a4a1f','#a9713a']);
+  } else if(FX_PRESETS[a.fx]){
+    let count = 16;
+    if(['hades','blackhole','starlord','crucified','destroyer','soulking'].includes(a.id)) count=26;
+    if(a.id==='rainbow') count=30;
+    spawnParticles(a.fx, count, FX_PRESETS[a.fx]);
+    if(['hades','blackhole','starlord','soulking','destroyer','crucified'].includes(a.id)){
+      setTimeout(()=>spawnParticles(a.fx, Math.round(count*0.6), FX_PRESETS[a.fx]), 400);
     }
   }
-  if(obtained.length===0){
-    // common-tier items (excluding clover) — Solstice, Crescent, Snowflake — fixed odds, NOT affected by luck or item chance
-    const commonSorted = [...ITEMS_COMMON].filter(i=>!i.guaranteed).sort((a,b)=>b.denom-a.denom);
-    for(const it of commonSorted){
-      if(Math.random() < 1/it.denom){
-        obtained.push(it);
-        break;
-      }
+}
+
+function renderAuraOnStage(a, label){
+  state.stageAura = a;
+  const sub = document.getElementById('auraText').querySelector('.auraSub');
+  const main = document.getElementById('auraMain');
+  sub.textContent = label || 'YOU GOT';
+  main.className = a.cls;
+  main.textContent = a.name;
+  main.classList.remove('moveText','glitch');
+  if(a.big) main.classList.add('moveText');
+  if(a.id==='torment') main.classList.add('glitch');
+  triggerEffect(a);
+}
+
+/* keep whatever is on stage alive permanently (re-spawn its particles),
+   and rotate through any equipped auras so their effects stay showing */
+function ambientTick(){
+  if(state.isRolling) return;
+  if(state._holdUntil && Date.now() < state._holdUntil) return;
+  if(state.equippedAuras.size > 0){
+    const arr = Array.from(state.equippedAuras);
+    state._ambientCounter = (state._ambientCounter||0) + 1;
+    const needSwitch = !state.stageAura || !arr.includes(state.stageAura.id) || (state._ambientCounter % 3 === 0);
+    if(needSwitch){
+      state.ambientIndex = (state.ambientIndex===undefined ? -1 : state.ambientIndex) + 1;
+      if(state.ambientIndex >= arr.length) state.ambientIndex = 0;
+      const a = AURA_BY_ID[arr[state.ambientIndex]];
+      renderAuraOnStage(a, 'EQUIPPED');
+      return;
     }
   }
-  // clover guaranteed always
-  const clover = ITEMS_COMMON.find(i=>i.guaranteed);
-  obtained.push(clover);
-  return obtained;
+  if(state.stageAura){
+    triggerEffect(state.stageAura);
+  }
+}
+setInterval(ambientTick, 900);
+
+/* ===================== ROLL LOGIC ===================== */
+function updateBonusDisplay(){
+  const left = 10 - (state.rollCount % 10 === 0 ? 0 : state.rollCount % 10);
+  document.getElementById('bonusCount').textContent = (state.rollCount % 10 === 0) ? 10 : left;
 }
 
 function doRoll(){
-  if(state.cooldown) return;
-  state.cooldown = true;
-  document.getElementById('rollBtn').disabled = true;
+  if(state.isRolling) return;
+  state.isRolling = true;
+  const btn = document.getElementById('rollBtn');
+  const bar = document.getElementById('rollBar');
+  const label = document.getElementById('rollLabel');
+  btn.disabled = true;
 
-  const luck = getTotalLuck();
-  const itemMult = getItemChanceMult();
-  const rarity = rollRarity(luck);
-  const itemsGot = rollItems(itemMult);
+  const cdMs = currentCooldownMs();
+  const startRollIdx = state.rollCount + 1;
+  const bonusActive = (startRollIdx % 10 === 0);
+  const luckMult = currentLuckMultiplier(bonusActive);
 
-  state.coins += rarity.coins;
-  state.rolls += 1;
-  itemsGot.forEach(it=> state.items[it.key]++ );
-
-  itemsGot.forEach(it=>{
-    if(["oscarheart","oscaramulet","genesiscore","gargantuan"].includes(it.key)){
-      toast(`${it.emoji} ${it.name.toUpperCase()} DROPPED!`);
-    }
-  });
-
-  if(state.highestRarity===null || RARITIES.indexOf(rarity) < RARITIES.indexOf(state.highestRarity)){
-    state.highestRarity = rarity;
-  }
-
-  showResult(rarity, itemsGot);
-  pushLog(rarity, itemsGot);
-  advancePassiveCounters();
-  renderAll();
-  startCooldown();
-}
-
-function startCooldown(){
-  const fill = document.getElementById('cooldownFill');
-  fill.style.transition='none';
-  fill.style.width='0%';
+  label.textContent = bonusActive ? 'ROLLING... (BONUS!)' : 'ROLLING...';
+  bar.style.transition = 'none';
+  bar.style.width='0%';
   requestAnimationFrame(()=>{
-    fill.style.transition='width 1s linear';
-    fill.style.width='100%';
+    bar.style.transition = `width ${cdMs}ms linear`;
+    bar.style.width='100%';
   });
+
+  // flicker random names during cooldown
+  const mainEl = document.getElementById('auraMain');
+  const subEl = document.querySelector('.auraSub');
+  subEl.textContent = bonusActive ? 'BONUS ROLL!' : 'ROLLING';
+  clearLayer(document.getElementById('particleLayer'));
+  clearLayer(document.getElementById('bgFxLayer'));
+  let flickerCount = 0;
+  const flickerInterval = setInterval(()=>{
+    const rnd = AURAS[Math.floor(Math.random()*AURAS.length)];
+    mainEl.className = rnd.cls;
+    mainEl.classList.remove('moveText','glitch');
+    mainEl.textContent = rnd.name;
+    flickerCount++;
+  }, 70);
+
   setTimeout(()=>{
-    state.cooldown=false;
-    document.getElementById('rollBtn').disabled=false;
-  },1000);
+    clearInterval(flickerInterval);
+    state.rollCount++;
+    const result = rollAura(luckMult);
+    state.inventory[result.id]++;
+    state.totalObtained[result.id]++;
+    const idx = AURAS.findIndex(x=>x.id===result.id);
+    if(idx < state.bestRarityIndex){
+      state.bestRarityIndex = idx;
+      document.getElementById('statBest').textContent = result.name;
+    }
+    renderAuraOnStage(result, bonusActive ? 'BONUS ROLL — YOU GOT' : 'YOU GOT');
+    state._holdUntil = Date.now() + 1800; // keep showing the actual roll result briefly before equipped display takes back over
+    toast('Obtained '+result.name+'!  (Owned: '+state.inventory[result.id]+' • Total: '+state.totalObtained[result.id]+')');
+    updateAllCounters();
+    updateBonusDisplay();
+    document.getElementById('statRolls').textContent = fmt(state.rollCount);
+    document.getElementById('statLuck').textContent = Math.round(currentLuckMultiplier(false)*100)+'%';
+
+    btn.disabled = false;
+    label.textContent = 'ROLL';
+    state.isRolling = false;
+
+    if(state.autoRoll){
+      state.autoTimer = setTimeout(doRoll, 60);
+    }
+  }, cdMs);
 }
 
-/* ============== DISPLAY RESULT ============== */
-function showResult(rarity, itemsGot){
-  const stage = document.getElementById('bigResult');
-  stage.style.animation='none';
-  void stage.offsetWidth;
-  stage.style.animation='';
-  stage.innerHTML = `
-    <span class="emoji" style="color:${rarity.color}">${rarity.emoji}</span>
-    <div class="name" style="color:${rarity.color}">${rarity.name}</div>
-    <div class="coins">+${fmt(rarity.coins)} coins</div>
-  `;
-  const popWrap = document.getElementById('itemPopups');
-  popWrap.innerHTML='';
-  itemsGot.forEach(it=>{
-    const d = document.createElement('div');
-    d.className='itemPop';
-    d.style.borderColor = it.color;
-    d.innerHTML = `<span>${it.emoji}</span><span style="color:${it.color}">+1 ${it.name}</span>`;
-    popWrap.appendChild(d);
+/* ===================== INVENTORY / EQUIP AURAS ===================== */
+function updateAllCounters(){
+  AURAS.forEach(a=>{
+    const el = document.getElementById('cnt_'+a.id);
+    if(el) el.textContent = 'x'+state.totalObtained[a.id];
+  });
+  renderTab();
+  renderEquippedRow();
+}
+
+function renderEquippedRow(){
+  const row = document.getElementById('equippedRow');
+  row.innerHTML='';
+  state.equippedAuras.forEach(id=>{
+    const a = AURA_BY_ID[id];
+    const chip = document.createElement('div');
+    chip.className='equippedChip';
+    chip.innerHTML = `<span class="${a.cls}" style="font-size:11px; text-shadow:none;">${a.name}</span>`;
+    row.appendChild(chip);
   });
 }
 
-function pushLog(rarity, itemsGot){
-  const log = document.getElementById('log');
-  const row = document.createElement('div');
-  row.className='logrow';
-  const itemStr = itemsGot.map(i=>i.emoji).join(' ');
-  row.innerHTML = `<span style="color:${rarity.color}">${rarity.emoji} ${rarity.name}</span><span class="t">+${fmt(rarity.coins)} | ${itemStr}</span>`;
-  log.appendChild(row);
-  while(log.children.length>15) log.removeChild(log.firstChild);
+function toggleEquipAura(id){
+  if(state.equippedAuras.has(id)){
+    state.equippedAuras.delete(id);
+  } else {
+    if(state.inventory[id] <= 0){ toast("You don't own any "+AURA_BY_ID[id].name+" auras yet."); return; }
+    state.equippedAuras.clear();
+    state.equippedAuras.add(id);
+    state.ambientIndex = -1;
+  }
+  renderTab();
+  renderEquippedRow();
 }
 
-function toast(msg){
-  const wrap = document.getElementById('toastWrap');
-  const t = document.createElement('div');
-  t.className='toast';
-  t.textContent = msg;
-  wrap.appendChild(t);
-  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .4s';setTimeout(()=>t.remove(),400);},2200);
+/* ===================== GAUNTLETS ===================== */
+function reqMetText(req){
+  return Object.entries(req).map(([id,n])=>{
+    const have = state.inventory[id]||0;
+    const ok = have>=n;
+    return `<span class="${ok?'ok':'no'}">${AURA_BY_ID[id].name} ${have}/${n}</span>`;
+  }).join('');
 }
-
-/* ============== CRAFTING ============== */
 function canCraft(g){
-  if(state.gauntletsOwned.includes(g.key)) return false;
-  const req = g.req;
-  if(req.gauntlets){
-    return req.gauntlets.every(k=>state.gauntletsOwned.includes(k));
-  }
-  for(const k in req){
-    if(k==='coins'){ if(state.coins < req.coins) return false; }
-    else { if((state.items[k]||0) < req[k]) return false; }
-  }
-  return true;
+  return Object.entries(g.req).every(([id,n])=>(state.inventory[id]||0)>=n);
+}
+function craft(gid){
+  const g = GAUNTLET_BY_ID[gid];
+  if(!canCraft(g)){ toast('Missing materials for '+g.name); return; }
+  Object.entries(g.req).forEach(([id,n])=>{ state.inventory[id]-=n; });
+  state.gauntletsOwned[gid]++;
+  toast('Crafted '+g.name+'!');
+  updateAllCounters();
+}
+function equipGauntlet(gid, slot){
+  if(state.gauntletsOwned[gid] <= 0) return;
+  const g = GAUNTLET_BY_ID[gid];
+  if(g.slot==='left-only' && slot==='right'){ toast(g.name+' can only go in the LEFT slot.'); return; }
+  if(g.slot==='right-only' && slot==='left'){ toast(g.name+' can only go in the RIGHT slot.'); return; }
+  if(slot==='left') state.equippedLeft = (state.equippedLeft===gid) ? null : gid;
+  if(slot==='right') state.equippedRight = (state.equippedRight===gid) ? null : gid;
+  renderSlots();
+  renderTab();
+  document.getElementById('statLuck').textContent = Math.round(currentLuckMultiplier(false)*100)+'%';
+  document.getElementById('statCd').textContent = (currentCooldownMs()/1000).toFixed(1)+'s';
+}
+function renderSlots(){
+  const l = document.getElementById('slotLeft');
+  const r = document.getElementById('slotRight');
+  l.classList.toggle('filled', !!state.equippedLeft);
+  r.classList.toggle('filled', !!state.equippedRight);
+  l.querySelector('.gname').textContent = state.equippedLeft ? GAUNTLET_BY_ID[state.equippedLeft].name : 'Empty';
+  r.querySelector('.gname').textContent = state.equippedRight ? GAUNTLET_BY_ID[state.equippedRight].name : 'Empty';
 }
 
-function craft(g){
-  if(!canCraft(g)) return;
-  const req = g.req;
-  if(req.gauntlets){
-    req.gauntlets.forEach(k=>{
-      state.gauntletsOwned.splice(state.gauntletsOwned.indexOf(k),1);
-    });
-  } else {
-    for(const k in req){
-      if(k==='coins') state.coins -= req.coins;
-      else state.items[k] -= req[k];
-    }
-  }
-  state.gauntletsOwned.push(g.key);
-  state.equipped = g.key;
-  toast(`Crafted ${g.name}! ✦`);
-  renderAll();
-}
-
-function equip(key){
-  state.equipped = state.equipped===key ? null : key;
-  renderAll();
-}
-
-/* ============== RENDER ============== */
-function reqString(g){
-  const req = g.req;
-  if(req.gauntlets) return "Requires: "+req.gauntlets.map(k=>getGauntlet(k).name).join(" + ");
-  const parts=[];
-  for(const k in req){
-    if(k==='coins') parts.push(fmt(req.coins)+" coins");
-    else parts.push(fmt(req[k])+"x "+(ALL_ITEMS.find(i=>i.key===k)?.name||k));
-  }
-  return "Requires: "+parts.join(", ");
-}
-
-function renderStats(){
-  document.getElementById('statCoins').textContent = fmt(state.coins);
-  document.getElementById('statRolls').textContent = state.rolls;
-  document.getElementById('statLuck').textContent = "x"+getTotalLuck().toFixed(2);
-  document.getElementById('statItemMult').textContent = "x"+getItemChanceMult();
-  const hEl = document.getElementById('statHighest');
-  if(state.highestRarity){
-    hEl.textContent = state.highestRarity.emoji+" "+state.highestRarity.name;
-    hEl.style.color = state.highestRarity.color;
-  } else {
-    hEl.textContent = "—";
-    hEl.style.color = "var(--gold2)";
-  }
-}
-
-function renderLuckLine(){
-  const base = getBaseLuck();
-  const passive = getActivePassiveLuck();
-  document.getElementById('luckLine').innerHTML =
-    `Base Luck: <b>x${base.toFixed(2)}</b> &nbsp;|&nbsp; Passive: <b>x${passive.toFixed(0)}</b> &nbsp;|&nbsp; Equipped: <b>${state.equipped?getGauntlet(state.equipped).name:'None'}</b>`;
-}
-
-function renderPassiveBadges(){
-  const wrap = document.getElementById('passiveBadges');
-  wrap.innerHTML='';
-  if(!state.equipped){ return; }
-  const g = getGauntlet(state.equipped);
-  const badges = [];
-  const addCycle=(label,p,activeLen,gapLen)=>{
-    const active = p.phase==='active';
-    const remaining = active ? (activeLen-p.count) : (gapLen-p.count);
-    badges.push(`<span class="pbadge ${active?'':'off'}">${label} ${active?(remaining)+'r left ACTIVE':'cooldown '+remaining+'r'}</span>`);
-  };
-  const keys = g.key==="eclipse" ? ["solar","lunar"] : [g.key];
-  keys.forEach(k=>{
-    if(k==="solar") addCycle("☀️ Solar Rays", state.solar,5,10);
-    if(k==="lunar") addCycle("🌙 Lunar Surge", state.lunar,1,10);
-    if(k==="steampunk") addCycle("⚙️ Shocked Gears", state.steampunk,10,12);
-    if(k==="blackhole") addCycle("🕳️ Gargantuan Burst", state.blackhole,40,25);
-    if(k==="frosty") badges.push(`<span class="pbadge">❄️ 2x Item Chance</span>`);
-    if(k==="oscar") badges.push(`<span class="pbadge">❤️ 5x Item Chance</span>`);
-    if(k==="starscourge") badges.push(`<span class="pbadge">🌠 10x Item Chance</span>`);
-  });
-  wrap.innerHTML = badges.join('');
-}
-
-function renderRarities(){
-  const wrap = document.getElementById('tab-rarities');
-  const luck = getTotalLuck();
-  const list = [...RARITIES].reverse(); // common -> genesis for display
-  wrap.innerHTML = list.map(r=>{
-    const eff = Math.max(2, r.denom/luck);
-    return `<div class="rarityRow" style="border:1px solid ${r.color}55;background:${r.color}11;">
-      <span class="rn" style="color:${r.color}">${r.emoji} ${r.name}</span>
-      <span class="rc">base ${odds(r.denom)}<br><span class="rv">now 1/${fmt(Math.ceil(eff))}</span></span>
-      <span class="rv">+${fmt(r.coins)}</span>
-    </div>`;
-  }).join('');
-}
-
-function renderItems(){
-  const wrap = document.getElementById('tab-items');
-  const luck = getTotalLuck();
-  const itemMult = getItemChanceMult();
-  wrap.innerHTML = ALL_ITEMS.map(it=>{
-    let chanceLabel;
-    if(it.guaranteed){ chanceLabel = "guaranteed"; }
-    else if(ITEMS_RARE.includes(it)){
-      const eff = Math.max(2,it.denom/itemMult);
-      chanceLabel = `base 1/${fmt(it.denom)} → now 1/${fmt(Math.ceil(eff))}`;
-    } else {
-      chanceLabel = `1/${it.denom} (fixed)`;
-    }
-    return `<div class="itemCard" style="border-color:${it.color}66">
-      <span class="ic">${it.emoji}</span>
-      <span class="iname" style="color:${it.color}">${it.name}</span>
-      <span class="icount">${state.items[it.key]}</span>
-      <span class="ichance">${chanceLabel}</span>
-    </div>`;
-  }).join('');
-}
-
-function renderGauntlets(){
-  const wrap = document.getElementById('tab-gauntlets');
-  wrap.innerHTML = GAUNTLETS.map(g=>{
-    const owned = state.gauntletsOwned.includes(g.key);
-    const equipped = state.equipped===g.key;
-    const craftable = canCraft(g);
-    let btn;
-    if(owned){
-      btn = `<button style="${equipped?`border-color:${g.color};background:${g.color}28;color:${g.color}`:''}" onclick="equip('${g.key}')">${equipped?'★ EQUIPPED':'Equip'}</button>`;
-    } else {
-      btn = `<button ${craftable?'':'disabled'} style="${craftable?`border-color:${g.color};background:${g.color}1f;`:''}" onclick="craft(getGauntlet('${g.key}'))">${craftable?'Craft':'Locked'}</button>`;
-    }
-    const cardStyle = `border-color:${g.color}${owned?'cc':'40'};background:${g.color}${equipped?'22':(owned?'14':'08')};${equipped?`box-shadow:0 0 12px ${g.color}55;`:''}`;
-    return `<div class="gcard" style="${cardStyle}">
-      <div class="gh"><span class="gname" style="color:${g.color}">${g.emoji} ${g.name}</span><span class="gluck" style="color:${g.color}">+${g.luck}% Luck</span></div>
-      <div class="greq">${reqString(g)}</div>
-      <div class="gpass" style="color:${g.color}">Passive: ${g.passive}</div>
-      ${btn}
-    </div>`;
-  }).join('');
-}
-
-function renderAll(){
-  renderStats();
-  renderLuckLine();
-  renderPassiveBadges();
-  renderRarities();
-  renderItems();
-  renderGauntlets();
-}
-
-/* ============== EVENTS ============== */
-document.getElementById('rollBtn').addEventListener('click', doRoll);
-document.querySelectorAll('.tab').forEach(tab=>{
-  tab.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.tabpanel').forEach(p=>p.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('tab-'+tab.dataset.tab).classList.add('active');
+/* ===================== TABS ===================== */
+let activeTab='inv';
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    activeTab = t.dataset.tab;
+    renderTab();
   });
 });
 
-renderAll();
+function renderTab(){
+  const wrap = document.getElementById('tabContent');
+  wrap.innerHTML='';
+  if(activeTab==='inv'){
+    AURAS.forEach(a=>{
+      const owned = state.inventory[a.id];
+      const total = state.totalObtained[a.id];
+      if(total<=0) return;
+      const card = document.createElement('div');
+      card.className='invCard';
+      const eq = state.equippedAuras.has(a.id);
+      card.innerHTML = `
+        <div class="info">
+          <span class="nm ${a.cls}" style="font-size:14px; text-shadow:none;">${a.name}</span>
+          <span class="meta">Owned: ${owned} &nbsp;•&nbsp; Total obtained: ${total}</span>
+        </div>
+        <button class="miniBtn ${eq?'eq':''}">${eq?'Equipped':'Equip'}</button>`;
+      card.querySelector('button').addEventListener('click', ()=>toggleEquipAura(a.id));
+      wrap.appendChild(card);
+    });
+    if(wrap.innerHTML==='') wrap.innerHTML = '<div style="color:var(--dim); font-size:12px; padding:10px;">No auras yet — start rolling!</div>';
+  } else {
+    CRAFT_ORDER.forEach(gid=>{
+      const g = GAUNTLET_BY_ID[gid];
+      const owned = state.gauntletsOwned[gid];
+      const card = document.createElement('div');
+      card.className='craftCard';
+      const boostText = g.bonusOverride ? 'Bonus Roll → 4x Luck' : ('+'+g.luck+'% Luck'+(g.cooldown?` · ${g.cooldown}s cooldown`:''));
+      card.innerHTML = `
+        <div class="top"><span class="gn">${g.name}</span><span class="boost">${boostText}</span></div>
+        <div class="reqs">${reqMetText(g.req)}</div>
+        <button class="craftBtn" ${canCraft(g)?'':'disabled'}>Craft${owned?(' (Owned: '+owned+')'):''}</button>
+        <div style="display:flex; gap:6px; margin-top:6px;">
+          <button class="miniBtn" data-slot="left" ${(owned && g.slot!=='right-only')?'':'disabled'}>${state.equippedLeft===gid?'Unequip L':'Equip Left'}</button>
+          <button class="miniBtn" data-slot="right" ${(owned && g.slot!=='left-only')?'':'disabled'}>${state.equippedRight===gid?'Unequip R':'Equip Right'}</button>
+        </div>`;
+      card.querySelector('.craftBtn').addEventListener('click', ()=>craft(gid));
+      card.querySelectorAll('.miniBtn[data-slot]').forEach(b=>{
+        b.addEventListener('click', ()=>equipGauntlet(gid, b.dataset.slot));
+      });
+      wrap.appendChild(card);
+    });
+  }
+}
+
+/* ===================== EVENTS ===================== */
+document.getElementById('rollBtn').addEventListener('click', doRoll);
+document.getElementById('autoBtn').addEventListener('click', ()=>{
+  state.autoRoll = !state.autoRoll;
+  document.getElementById('autoBtn').classList.toggle('active', state.autoRoll);
+  document.getElementById('autoState').textContent = state.autoRoll?'ON':'OFF';
+  if(state.autoRoll && !state.isRolling) doRoll();
+});
+
+/* ===================== INIT ===================== */
+renderOdds();
+renderSlots();
+renderTab();
+updateBonusDisplay();
+document.getElementById('statCd').textContent = (currentCooldownMs()/1000).toFixed(1)+'s';
 </script>
 </body>
 </html>

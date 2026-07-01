@@ -679,7 +679,7 @@ const CRAFT_ORDER = ['lucky','desire','frosty','steampunk','volcanicg','blackhol
 const POTIONS = [
   {id:'lucky', name:'Lucky Potion', desc:'+100% Luck for 1 minute.', type:'timed', duration:60, luckPct:100, reqAuras:{common:100}, reqPotions:{}},
   {id:'speedy', name:'Speedy Potion', desc:'-0.1s Roll Cooldown for 1 minute.', type:'timed', duration:60, cooldownDelta:-0.1, reqAuras:{common:100}, reqPotions:{}},
-  {id:'transcendent', name:'Transcendent Potion', desc:'GUARANTEES a Rainbow-or-better aura on your next roll, plus +1,000,000% Luck.', type:'instant', luckPct:1000000, reqAuras:{rainbow:3, soulking:1}, reqPotions:{speedy:10, lucky:10}},
+  {id:'transcendent', name:'Transcendent Potion', desc:'GUARANTEES a Rainbow-or-better aura on your next roll, plus +100,000% Luck.', type:'instant', luckPct:100000, reqAuras:{rainbow:3, soulking:1}, reqPotions:{speedy:10, lucky:10}},
 ];
 const POTION_BY_ID = Object.fromEntries(POTIONS.map(p=>[p.id,p]));
 const POTION_ORDER = ['lucky','speedy','transcendent'];
@@ -751,8 +751,8 @@ function currentCooldownMs(){
 
 function rollAura(luckMult){
   for(const a of AURAS){
-    const effDenom = a.denom / luckMult;
-    if(effDenom <= 1 || Math.random() < 1/effDenom){
+    const effDenom = Math.max(2, a.denom / luckMult);
+    if(Math.random() < 1/effDenom){
       return a;
     }
   }

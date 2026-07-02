@@ -2,1968 +2,1154 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chromas RNG</title>
+<title>FAZ CLICKER</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Cinzel:wght@600;800&family=Cinzel+Decorative:wght@700;900&family=Creepster&family=Bungee&family=Pirata+One&family=Caveat:wght@700&family=Press+Start+2P&family=Special+Elite&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
---bg-0:#05050a;
---bg-1:#0b0c18;
---bg-2:#11132a;
---panel:#13152a;
---panel-edge:#272a52;
---accent:#7c5cff;
---accent-2:#37e2ff;
---text:#e9e9f7;
---dim:#8a8db0;
---good:#43e08a;
---bad:#ff5c7a;
+--bg:#0a0912;
+--bg2:#150f24;
+--panel:#181229;
+--panel-edge:#3a2a5c;
+--gold:#f0c04a;
+--gold-dim:#7a6224;
+--teal:#3fe0c5;
+--teal-dim:#1d6459;
+--red:#e0454f;
+--purple:#9a6bff;
+--silver:#d8d6e8;
+--text:#e9e4ff;
+--dim:#8a80ad;
 }
 *{box-sizing:border-box;}
-html,body{height:100%;}
 body{
 margin:0;
 background:
-radial-gradient(ellipse 1200px 700px at 20% -10%, #1c1340 0%, transparent 60%),
-radial-gradient(ellipse 1000px 800px at 100% 10%, #0c2440 0%, transparent 55%),
-linear-gradient(180deg, var(--bg-0), var(--bg-1) 40%, var(--bg-0));
+radial-gradient(ellipse at 50% -10%, #241b3d 0%, var(--bg) 55%),
+repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
 color:var(--text);
-font-family:'Orbitron', sans-serif;
-overflow-x:hidden;
-min-height:100vh;
-}
-::-webkit-scrollbar{width:10px;height:10px;}
-::-webkit-scrollbar-thumb{background:var(--panel-edge);border-radius:6px;}
-::-webkit-scrollbar-track{background:transparent;}
-
-.app{
-display:grid;
-grid-template-columns: 300px 1fr 340px;
-grid-template-rows: auto 1fr;
-gap:14px;
-padding:16px;
-min-height:100vh;
-}
-@media (max-width: 980px) and (orientation:landscape){
-.app{grid-template-columns: 240px 1fr 280px;}
-.headerStats{gap:14px;}
-}
-
-/* ===== HEADER ===== */
-.header{
-grid-column:1 / -1;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:10px 22px;
-background:linear-gradient(180deg, rgba(124,92,255,.10), rgba(124,92,255,.02));
-border:1px solid var(--panel-edge);
-border-radius:14px;
-position:relative;
-overflow:hidden;
-}
-.header::before{
-content:"";
-position:absolute; inset:0;
-background:
-repeating-linear-gradient(90deg, rgba(124,92,255,.05) 0 1px, transparent 1px 38px);
-pointer-events:none;
-}
-.logo{
-font-family:'Bungee', cursive;
-font-weight:400;
-font-size:30px;
-letter-spacing:3px;
-background:linear-gradient(90deg,red,orange,yellow,green,cyan,blue,violet,red);
-background-size:300% auto;
--webkit-background-clip:text;
-background-clip:text;
-color:transparent;
-animation:shine 3s linear infinite;
-text-shadow:0 0 30px rgba(124,92,255,.25);
-}
-@keyframes shine{ to{ background-position:300% center; } }
-
-.headerStats{
-display:flex;
-gap:26px;
-font-size:12px;
-color:var(--dim);
-z-index:1;
-}
-.headerStats b{
-display:block;
-font-size:16px;
-color:var(--text);
-font-family:'Orbitron';
-}
-
-/* ===== PANEL GENERIC ===== */
-.panel{
-background:linear-gradient(180deg, var(--panel), #0e0f20);
-border:1px solid var(--panel-edge);
-border-radius:14px;
-padding:14px;
-display:flex;
-flex-direction:column;
-min-height:0;
-}
-.panelTitle{
-font-size:12px;
-letter-spacing:2px;
-color:var(--accent-2);
-text-transform:uppercase;
-font-weight:700;
-margin-bottom:10px;
-display:flex;
-align-items:center;
-gap:8px;
-}
-.panelTitle::after{
-content:"";
-height:1px;
-flex:1;
-background:linear-gradient(90deg, var(--panel-edge), transparent);
-}
-
-/* ===== LEFT: ODDS LIST ===== */
-.oddsList{
-overflow-y:auto;
-display:flex;
-flex-direction:column;
-gap:6px;
-padding-right:4px;
-max-height:calc(100vh - 230px);
-}
-.oddsRow{
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:7px 10px;
-border-radius:8px;
-background:rgba(255,255,255,.02);
-border:1px solid rgba(255,255,255,.04);
-font-size:11px;
-}
-.oddsRow .nm{font-weight:700; font-size:12px;}
-.oddsRow .pc{color:var(--dim); font-variant-numeric:tabular-nums;}
-.oddsRow .ct{
-font-size:10px;
-background:rgba(255,255,255,.06);
-padding:1px 6px;
-border-radius:20px;
-color:var(--dim);
-}
-
-/* ===== CENTER STAGE ===== */
-.center{
-display:flex;
-flex-direction:column;
-gap:14px;
-min-height:0;
-}
-.stageWrap{
-position:relative;
-flex:1;
-border-radius:18px;
-border:1px solid var(--panel-edge);
-background:
-radial-gradient(circle at 50% 40%, #161830 0%, #08080f 75%);
-overflow:hidden;
-min-height:340px;
-display:flex;
-align-items:center;
-justify-content:center;
-transition: background 1.2s ease;
-}
-.stageWrap.stageSeraphim{
-background:
-radial-gradient(circle at 50% 50%, #1c1006 0%, #0a0603 55%, #030202 100%);
-}
-.stageGrid{
-position:absolute; inset:0;
-background-image:
-linear-gradient(rgba(124,92,255,.06) 1px, transparent 1px),
-linear-gradient(90deg, rgba(124,92,255,.06) 1px, transparent 1px);
-background-size:34px 34px;
-mask-image:radial-gradient(circle at center, black, transparent 75%);
-pointer-events:none;
-}
-.fxLayer{
-position:absolute; inset:0;
-pointer-events:none;
-display:flex;align-items:center;justify-content:center;
-overflow:hidden;
-}
-.bgFx{
-position:absolute; inset:0;
-pointer-events:none;
-opacity:0;
-transition:opacity .4s ease;
-}
-.bgFx.show{opacity:1;}
-
-.auraText{
-position:relative;
-z-index:5;
-text-align:center;
-padding:20px;
-user-select:none;
-white-space:nowrap;
-}
-.auraSub{
-display:block;
-font-family:'Orbitron';
-font-size:11px;
-letter-spacing:4px;
-color:var(--dim);
-margin-bottom:8px;
-text-transform:uppercase;
-}
-.equippedRow{
-position:absolute;
-bottom:10px; left:0; right:0;
-display:flex;
-justify-content:center;
-gap:10px;
-flex-wrap:wrap;
-z-index:6;
-pointer-events:none;
-}
-.equippedChip{
-font-size:11px;
-padding:3px 10px;
-border-radius:20px;
-background:rgba(0,0,0,.4);
-backdrop-filter:blur(2px);
-border:1px solid rgba(255,255,255,.15);
-}
-
-/* potion buffs row */
-.potionRow{
-position:absolute;
-top:10px; left:0; right:0;
-display:flex;
-justify-content:center;
-gap:8px;
-flex-wrap:wrap;
-z-index:6;
-pointer-events:none;
-}
-.potionChip{
-font-size:10px;
-padding:3px 9px;
-border-radius:20px;
-background:rgba(124,92,255,.18);
-backdrop-filter:blur(2px);
-border:1px solid var(--accent);
-color:#cfd2ff;
-font-weight:700;
-}
-
-/* particle */
-.particle{
-position:absolute;
-pointer-events:none;
-will-change:transform, opacity;
-}
-
-/* ===== CONTROLS ===== */
-.controls{
-display:flex;
-gap:12px;
-align-items:stretch;
-}
-.rollBtn{
-flex:1;
-border:none;
-cursor:pointer;
-border-radius:14px;
-font-family:'Orbitron';
-font-weight:900;
+font-family:'VT323', monospace;
 font-size:20px;
+min-height:100vh;
+overflow-x:hidden;
+}
+.arcade{ font-family:'Press Start 2P', monospace; }
+
+#stage{
+max-width:1180px;
+margin:0 auto;
+padding:18px 14px 60px;
+}
+
+header{
+text-align:center;
+margin-bottom:14px;
+}
+header h1{
+font-size:28px;
+margin:0;
+color:var(--gold);
+text-shadow:0 0 6px rgba(240,192,74,0.6), 0 0 22px rgba(240,192,74,0.25);
 letter-spacing:2px;
-color:#fff;
-background:linear-gradient(135deg, #7c5cff, #37e2ff);
-box-shadow:0 8px 24px rgba(124,92,255,.35), inset 0 1px 0 rgba(255,255,255,.3);
-position:relative;
-overflow:hidden;
-padding:16px;
-transition:transform .08s ease, filter .2s ease;
 }
-.rollBtn:active{transform:scale(.97);}
-.rollBtn:disabled{filter:grayscale(.4) brightness(.7); cursor:not-allowed;}
-.rollBtn .barFill{
-position:absolute; left:0; top:0; bottom:0;
-background:rgba(255,255,255,.18);
-width:0%;
+header .sub{
+color:var(--dim);
+font-size:16px;
+margin-top:6px;
+letter-spacing:1px;
 }
-.rollBtn span{position:relative; z-index:2;}
-
-.sideBtns{display:flex; flex-direction:column; gap:10px; width:160px;}
-.toggleBtn{
-border:1px solid var(--panel-edge);
-background:var(--panel);
-color:var(--text);
-border-radius:12px;
-padding:10px;
-cursor:pointer;
-font-family:'Orbitron';
-font-size:12px;
-font-weight:700;
-display:flex; flex-direction:column; align-items:center; gap:4px;
-transition:all .15s ease;
-}
-.toggleBtn.active{
-background:linear-gradient(135deg, rgba(67,224,138,.18), rgba(67,224,138,.05));
-border-color:var(--good);
-color:var(--good);
-}
-.bonusBadge{
-font-size:10px; color:var(--dim);
-}
-.bonusBadge b{color:#ffd86b;}
-
-/* bonus-next-roll active states */
-.bonusReady{
-background:linear-gradient(135deg, rgba(255,216,107,.18), rgba(255,160,0,.06)) !important;
-border-color:#ffd86b !important;
-color:#ffd86b !important;
-animation: bonusPulse 1s ease-in-out infinite;
-}
-.bonusReady #bonusMult{
-color:#ffd86b;
-font-size:11px;
-}
-@keyframes bonusPulse{
-0%,100%{ box-shadow: 0 0 0px rgba(255,216,107,0); }
-50%{ box-shadow: 0 0 14px rgba(255,216,107,.5); }
-}
-.luckBonusFlash{
-color:#ffd86b !important;
-text-shadow: 0 0 10px #ffd86b;
-animation: luckFlash .7s ease-in-out infinite alternate;
-}
-@keyframes luckFlash{
-from{ opacity:1; }
-to{ opacity:.5; }
-}
-.rollBtnBonus{
-background: linear-gradient(135deg, #ffd86b, #ff9900) !important;
-box-shadow: 0 8px 28px rgba(255,180,0,.5), inset 0 1px 0 rgba(255,255,255,.3) !important;
-}
-
-/* ===== GAUNTLET SLOTS ===== */
-.slots{
+.save-row{
 display:flex;
-gap:12px;
+gap:10px;
+justify-content:center;
+margin-top:14px;
+flex-wrap:wrap;
+}
+.save-row button{ font-size:10px; padding:8px 12px; }
+#saveToast{
+display:none;
+max-width:520px;
+margin:10px auto 0;
+text-align:center;
+font-size:14px;
+color:var(--teal);
+background:rgba(63,224,197,.08);
+border:1px solid var(--teal-dim);
+border-radius:8px;
+padding:6px 10px;
+}
+#saveToast.error{ color:var(--red); background:rgba(224,69,79,.08); border-color:var(--red); }
+
+.save-panel{
+display:none;
+max-width:640px;
+margin:14px auto 0;
+background:linear-gradient(180deg,var(--panel),var(--bg2));
+border:2px solid var(--panel-edge);
+border-radius:10px;
+padding:12px;
+}
+.save-panel .sp-label{ font-size:13px; color:var(--dim); margin-bottom:6px; text-align:left; }
+.save-panel textarea{
+width:100%;
+height:120px;
+resize:vertical;
+background:#0d0a17;
+color:var(--teal);
+border:1px solid var(--panel-edge);
+border-radius:6px;
+font-family:'VT323', monospace;
+font-size:15px;
+padding:8px;
+}
+.save-panel .sp-btns{ display:flex; gap:10px; justify-content:center; margin-top:10px; flex-wrap:wrap; }
+
+.top-row{
+display:flex;
+gap:14px;
+flex-wrap:wrap;
+justify-content:center;
+margin-bottom:16px;
+}
+.stat-box{
+background:linear-gradient(180deg,var(--panel),var(--bg2));
+border:2px solid var(--panel-edge);
+border-radius:10px;
+padding:10px 18px;
+min-width:180px;
+text-align:center;
+position:relative;
+overflow:visible;
+}
+.stat-box .label{
+font-size:12px;
+color:var(--dim);
+letter-spacing:1px;
+}
+.stat-box .value{
+font-family:'Press Start 2P', monospace;
+font-size:20px;
+margin-top:6px;
+transition:transform .08s ease;
+}
+.stat-box.clicks .value{ color:var(--teal); text-shadow:0 0 10px rgba(63,224,197,.5);}
+.stat-box.tokens .value{ color:var(--gold); text-shadow:0 0 10px rgba(240,192,74,.5);}
+.stat-box .rate{
+font-size:13px;
+color:var(--dim);
+margin-top:4px;
+}
+.pulse{ animation:pulse .25s ease; }
+@keyframes pulse{ 0%{transform:scale(1.28);} 100%{transform:scale(1);} }
+
+.float-pop{
+position:absolute;
+left:50%;
+top:-6px;
+transform:translateX(-50%);
+font-family:'Press Start 2P', monospace;
+font-size:13px;
+pointer-events:none;
+animation:floatUp 0.9s ease-out forwards;
+white-space:nowrap;
+z-index:5;
+}
+@keyframes floatUp{
+0%{ opacity:1; transform:translate(-50%,0); }
+100%{ opacity:0; transform:translate(-50%,-38px); }
+}
+
+.mask-wrap{
+display:flex;
+flex-direction:column;
+align-items:center;
+margin:6px 0 26px;
+position:relative;
+}
+#maskBtn{
+width:190px;
+height:190px;
+border-radius:50%;
+border:5px solid var(--gold-dim);
+background:radial-gradient(circle at 35% 30%, #3a2a1a, #120c1c 75%);
+font-size:96px;
+cursor:pointer;
+display:flex;
+align-items:center;
+justify-content:center;
+box-shadow:0 0 0 6px rgba(0,0,0,.4), 0 0 40px rgba(240,192,74,.15) inset;
+transition:transform .08s ease, box-shadow .2s ease, border-color .2s ease;
+user-select:none;
+position:relative;
+}
+#maskBtn:hover{ border-color:var(--gold); }
+#maskBtn:active{ transform:scale(.94); }
+#maskBtn.ready{ box-shadow:0 0 0 6px rgba(0,0,0,.4), 0 0 50px rgba(240,192,74,.55) inset, 0 0 30px rgba(240,192,74,.4); }
+#maskBtn.cooling{ filter:grayscale(.55) brightness(.75); cursor:not-allowed; }
+#maskCooldownRing{
+position:absolute;
+top:-5px; left:-5px;
+width:200px; height:200px;
+pointer-events:none;
+}
+.mask-hint{
+margin-top:10px;
+color:var(--dim);
+font-size:15px;
+text-align:center;
+}
+.mask-hint b{ color:var(--gold); }
+
+h2.section-title{
+font-family:'Press Start 2P', monospace;
+font-size:15px;
+color:var(--purple);
+border-bottom:2px solid var(--panel-edge);
+padding-bottom:8px;
+margin:34px 0 14px;
+letter-spacing:1px;
+}
+
+.slots{
+display:grid;
+grid-template-columns:repeat(6,1fr);
+gap:10px;
 }
 .slot{
-flex:1;
-border:1px dashed var(--panel-edge);
-border-radius:12px;
-padding:10px;
-text-align:center;
-background:rgba(255,255,255,.015);
+aspect-ratio:1/1;
+background:linear-gradient(180deg,var(--panel),var(--bg2));
+border:2px dashed var(--panel-edge);
+border-radius:10px;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
 cursor:pointer;
-min-height:74px;
-display:flex; flex-direction:column; align-items:center; justify-content:center;
-}
-.slot small{color:var(--dim); font-size:9px; letter-spacing:1px;}
-.slot .gname{font-size:12px; font-weight:700; margin-top:3px;}
-.slot.filled{border-style:solid; border-color:var(--accent);}
-
-/* ===== RIGHT PANEL TABS ===== */
-.rightPanel{display:flex; flex-direction:column; min-height:0;}
-.tabs{
-display:flex; gap:6px; margin-bottom:10px;
-}
-.tab{
-flex:1;
+position:relative;
+padding:4px;
 text-align:center;
-padding:8px 4px;
+}
+.slot.filled{ border-style:solid; border-color:var(--teal-dim); }
+.slot .icon{ font-size:34px; }
+.slot .name{ font-size:11px; color:var(--dim); margin-top:2px; line-height:1.15;}
+.slot .num{
+position:absolute; top:4px; left:6px; font-size:11px; color:var(--dim);
+font-family:'Press Start 2P', monospace;
+}
+.slot.unpowered{ box-shadow:0 0 0 2px var(--red) inset; }
+.slot.unpowered::after{
+content:'NO PWR';
+position:absolute; bottom:3px; font-size:9px; color:var(--red);
+font-family:'Press Start 2P', monospace;
+}
+.slot.empty .name{ color:#4a4370; }
+
+.grid-cards{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+gap:12px;
+}
+.card{
+background:linear-gradient(180deg,var(--panel),var(--bg2));
+border:2px solid var(--panel-edge);
+border-radius:10px;
+padding:12px;
+position:relative;
+}
+.card .rarity-tag{
+font-family:'Press Start 2P', monospace;
+font-size:9px;
+display:inline-block;
+padding:3px 6px;
+border-radius:4px;
+margin-bottom:6px;
+letter-spacing:.5px;
+}
+.r-rare{ background:#284a7a; color:#a9cbff; }
+.r-epic{ background:#5a2a7a; color:#e2b9ff; }
+.r-legendary{ background:#7a5a1a; color:#ffdf8a; }
+.r-mythical{ background:#7a1a3a; color:#ff9ac4; }
+.r-secret{ background:#2a2a2a; color:#d8d6e8; }
+.r-nightmare{ background:#3a0a0a; color:#ff5c5c; }
+
+.card .cname{ font-size:19px; color:var(--text); display:flex; align-items:center; gap:8px;}
+.card .cname .ic{ font-size:26px; }
+.card .desc{ color:var(--dim); font-size:14px; margin:6px 0 8px; line-height:1.3;}
+.card .count{ font-size:13px; color:var(--teal); }
+.card button{ width:100%; margin-top:8px; }
+
+button.act{
+font-family:'Press Start 2P', monospace;
 font-size:11px;
-font-weight:700;
-letter-spacing:1px;
-border-radius:8px;
-cursor:pointer;
-color:var(--dim);
-background:rgba(255,255,255,.03);
-border:1px solid transparent;
-}
-.tab.active{
-color:#fff;
-background:linear-gradient(135deg, rgba(124,92,255,.3), rgba(55,226,255,.12));
-border-color:var(--accent);
-}
-.tabContent{flex:1; overflow-y:auto; max-height:calc(100vh - 300px); padding-right:4px;}
-
-.invCard{
-display:flex; align-items:center; justify-content:space-between;
-padding:8px 10px; margin-bottom:6px;
-border-radius:10px;
-background:rgba(255,255,255,.02);
-border:1px solid rgba(255,255,255,.05);
-}
-.invCard .info{display:flex; flex-direction:column;}
-.invCard .info .nm{font-size:13px; font-weight:800;}
-.invCard .info .meta{font-size:10px; color:var(--dim);}
-.miniBtn{
-font-size:10px;
-border:1px solid var(--panel-edge);
-background:rgba(255,255,255,.04);
+background:linear-gradient(180deg,#3a2a6a,#241748);
 color:var(--text);
-border-radius:6px;
-padding:5px 9px;
+border:2px solid var(--purple);
+border-radius:7px;
+padding:9px 10px;
 cursor:pointer;
-font-family:'Orbitron';
-font-weight:700;
+transition:transform .06s ease, background .15s ease;
 }
-.miniBtn:hover{border-color:var(--accent);}
-.miniBtn.eq{background:linear-gradient(135deg, var(--good), #2bbf72); color:#06210f; border:none;}
-.miniBtn:disabled{opacity:.35; cursor:not-allowed;}
+button.act:hover:not(:disabled){ background:linear-gradient(180deg,#4a37888,#2c1d5a); transform:translateY(-1px); }
+button.act:active:not(:disabled){ transform:translateY(1px); }
+button.act:disabled{ opacity:.35; cursor:not-allowed; }
+button.act.owned{ border-color:var(--teal); color:var(--teal); }
+button.act.gold{ border-color:var(--gold); }
 
-.craftCard{
-padding:10px; margin-bottom:10px; border-radius:12px;
-background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.06);
-}
-.craftCard .top{display:flex; justify-content:space-between; align-items:baseline;}
-.craftCard .gn{font-size:14px; font-weight:900;}
-.craftCard .boost{font-size:11px; color:var(--good); font-weight:700;}
-.craftCard .reqs{margin:6px 0; font-size:11px; color:var(--dim); line-height:1.6;}
-.craftCard .reqs span{display:inline-block; margin-right:8px;}
-.craftCard .reqs .ok{color:var(--good);}
-.craftCard .reqs .no{color:var(--bad);}
-.craftBtn{
-width:100%; padding:8px; border-radius:8px; border:none;
-background:linear-gradient(135deg, var(--accent), #5232c9);
-color:#fff; font-family:'Orbitron'; font-weight:800; font-size:11px;
-cursor:pointer; letter-spacing:1px;
-}
-.craftBtn:disabled{background:#2a2a3a; color:#666; cursor:not-allowed;}
-
-.potionTimer{
-font-size:10px; color:var(--accent-2); font-weight:700; margin-top:6px;
-}
-.activePotionsBox{
-border:1px solid var(--good); border-radius:10px; padding:8px 10px; margin-bottom:12px;
-background:rgba(67,224,138,.06);
-}
-.activePotionsBox .title{font-size:10px; letter-spacing:1px; color:var(--good); font-weight:800; margin-bottom:6px;}
-.activePotionsBox .row{display:flex; justify-content:space-between; font-size:11px; padding:2px 0; color:var(--text);}
-.activePotionsBox .empty{font-size:11px; color:var(--dim);}
-
-.toast{
-position:fixed; top:20px; left:50%; transform:translateX(-50%);
-background:rgba(10,10,20,.92); border:1px solid var(--accent);
-padding:10px 22px; border-radius:30px; font-size:13px; font-weight:700;
-z-index:999; opacity:0; pointer-events:none; transition:all .3s ease;
-box-shadow:0 10px 30px rgba(0,0,0,.5);
-}
-.toast.show{opacity:1; top:30px;}
-
-/* ===== AURA FONT/COLOR STYLES per rarity ===== */
-.r-common{font-family:'Orbitron'; font-weight:700; font-size:30px; color:#cfd2e6;}
-.r-rare{font-family:'Orbitron'; font-weight:700; font-size:32px; color:#5db3ff;}
-.r-epic{font-family:'Orbitron'; font-weight:900; font-size:34px; color:#c084ff;}
-.r-divine{font-family:'Cinzel Decorative'; font-weight:700; font-size:34px; color:#fff3b0;}
-.r-dizzy{font-family:'Caveat'; font-weight:700; font-size:46px; color:#c79356;}
-.r-starstrider{font-family:'Orbitron'; font-weight:700; font-size:34px; color:#eaf6ff; text-shadow:0 0 20px #9fd8ff;}
-.r-demonic{font-family:'Bungee'; font-size:34px; color:#ff3636;}
-.r-volcanic{font-family:'Bungee'; font-size:34px; color:#ff8a2b;}
-.r-zombie{font-family:'Special Elite'; font-size:32px; color:#79e35a;}
-.r-galactic{font-family:'Cinzel Decorative'; font-weight:700; font-size:34px; color:#b07bff;}
-.r-rainbow{font-family:'Pirata One'; font-size:42px; background:linear-gradient(90deg,red,orange,yellow,green,cyan,blue,violet,red); background-size:300% auto; -webkit-background-clip:text; background-clip:text; color:transparent; animation:rainbowMove .8s linear infinite;}
-@keyframes rainbowMove{ to{ background-position:300% center; } }
-.r-soulking{font-family:'Creepster'; font-size:48px; color:#40e0d0;}
-.r-destroyer{font-family:'Bungee'; font-size:58px; color:#ff1a1a;}
-.r-crucified{font-family:'Cinzel Decorative'; font-weight:900; font-size:64px; color:#ffe9b0; text-shadow:0 0 40px #ffcf6b, 0 0 90px #ffb347;}
-.r-torment{font-family:'Special Elite'; font-size:36px; color:#999;}
-.r-blackhole{font-family:'Orbitron'; font-weight:900; font-size:40px; color:#0a0a0a; text-shadow:0 0 4px #000, 0 0 16px #ff7b00, 0 0 36px #ff4500, 0 0 65px rgba(255,120,0,.6);}
-.r-starlord{font-family:'Orbitron'; font-weight:900; font-size:40px; color:#7ad8ff; text-shadow:0 0 30px #2bb2ff;}
-.r-seraphim{
-font-family:'Cinzel Decorative'; font-weight:900; font-size:42px;
-background: linear-gradient(to bottom, #ffffff 0%, #fff8dc 45%, #ffe066 100%);
--webkit-background-clip:text; background-clip:text;
-color:transparent; -webkit-text-fill-color:transparent;
-text-shadow:0 0 30px #ffe066, 0 0 70px #ffcc00, 0 0 120px rgba(255,200,0,.4);
-}
-.seraphBreathe{
-display:inline-block;
-animation: seraphimBreathe 3.4s ease-in-out infinite;
-transform-origin:50% 50%;
-}
-@keyframes seraphimBreathe{
-0%,100%{ transform:scale(1); filter:brightness(1); }
-50%{ transform:scale(1.045); filter:brightness(1.18); }
-}
-
-/* Seraphim's six golden 🪽 wing emoji, orbiting around the stage text on loop */
-.seraphWingRing{
-position:absolute; left:50%; top:50%; width:0; height:0;
-animation: spin 8s linear infinite;
-pointer-events:none;
-z-index:4;
-}
-.seraphWingSat{
-position:absolute; left:0; top:0;
-transform-origin:0 0;
-}
-.seraphWingSat .inner{
-display:inline-block;
-font-size:26px;
-line-height:1;
-animation: spin 8s linear infinite reverse;
-}
-
-/* Crucified's giant cross, glowing behind the stage text */
-.crucifiedCross{
-position:absolute; left:50%; top:50%; width:340px; height:340px;
-transform:translate(-50%,-50%);
-pointer-events:none;
-}
-.crucifiedCross .beam{
-position:absolute;
-background:linear-gradient(180deg,#fff3cf,#ffcf6b 45%,#ffb347);
+.upgrades-list{ display:flex; flex-direction:column; gap:10px; }
+.upg{
+background:linear-gradient(180deg,var(--panel),var(--bg2));
+border:2px solid var(--panel-edge);
 border-radius:10px;
-box-shadow:0 0 40px 12px rgba(255,207,107,.55), 0 0 100px 34px rgba(255,179,71,.32);
+padding:12px 14px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:12px;
+flex-wrap:wrap;
 }
-.crucifiedCross .vert{ left:50%; top:0; width:15%; height:100%; transform:translateX(-50%); }
-.crucifiedCross .horiz{ left:50%; top:26%; width:100%; height:15%; transform:translate(-50%,-50%); }
+.upg .info{ flex:1; min-width:220px; }
+.upg .uname{ font-size:18px; color:var(--text); }
+.upg .udesc{ font-size:14px; color:var(--dim); margin-top:3px; }
+.upg .ucost{ font-size:14px; color:var(--gold); margin-top:4px; }
+.upg.done{ opacity:.55; }
+.upg.done .uname::after{ content:' ✓ OWNED'; color:var(--teal); font-size:12px; }
 
-/* Soul King flame lick at the bottom edge of the stage */
-.soulFlame{
-position:absolute; bottom:0; width:26px; height:70px;
-background:linear-gradient(0deg, #40e0d0 0%, #1fb3a5 40%, transparent 100%);
-border-radius:50% 50% 20% 20%/60% 60% 20% 20%;
-filter: blur(1px);
-opacity:.85;
-transform-origin:bottom center;
-animation: flameFlicker 1s ease-in-out infinite alternate;
+.salvage-panel{
+background:linear-gradient(180deg,var(--panel),var(--bg2));
+border:2px solid var(--panel-edge);
+border-radius:12px;
+padding:16px;
+text-align:center;
 }
-@keyframes flameFlicker{
-0%{ transform:scaleY(.85) scaleX(.9) translateY(2px); opacity:.7; }
-100%{ transform:scaleY(1.15) scaleX(1.05) translateY(-4px); opacity:1; }
+.salvage-panel .luck{ color:var(--purple); font-size:15px; margin-bottom:10px; }
+.salvage-btns{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+.salvage-log{
+margin-top:14px;
+max-height:150px;
+overflow-y:auto;
+text-align:left;
+font-size:14px;
+background:rgba(0,0,0,.25);
+border-radius:8px;
+padding:8px 12px;
 }
+.salvage-log div{ padding:2px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+.salvage-result{
+font-family:'Press Start 2P', monospace;
+font-size:13px;
+margin-top:10px;
+animation:resultPop .5s ease;
+}
+@keyframes resultPop{ 0%{ transform:scale(0.4); opacity:0;} 60%{ transform:scale(1.15);} 100%{ transform:scale(1); opacity:1;} }
 
-.moveText{ animation:movex 1.6s ease-in-out infinite alternate; display:inline-block;}
-@keyframes movex{ from{transform:translateX(-40px) rotate(-1deg);} to{transform:translateX(40px) rotate(1deg);} }
+.locked-note{ color:var(--dim); font-size:13px; margin-top:6px;}
 
-.glitch{ animation: glitchAnim .15s infinite; }
-@keyframes glitchAnim{
-0%{ transform:translate(0,0); opacity:1;}
-20%{ transform:translate(-3px,2px); opacity:.8;}
-40%{ transform:translate(3px,-2px); opacity:1;}
-60%{ transform:translate(-2px,-1px); opacity:.7;}
-80%{ transform:translate(2px,1px); opacity:1;}
-100%{ transform:translate(0,0); opacity:1;}
-}
-
-.bgRadial{ animation:spin 14s linear infinite; }
-@keyframes spin{ to{transform:rotate(360deg);} }
-.bgPulse{ animation:pulse 2.4s ease-in-out infinite; }
-@keyframes pulse{ 0%,100%{opacity:.5;} 50%{opacity:1;} }
-@keyframes fogPulse{
-0%{opacity:.85;}
-15%{opacity:0;}
-20%{opacity:0;}
-100%{opacity:.85;}
-}
-@keyframes fogDrift{
-0%{ transform:translate(calc(-50% - var(--driftX)), -50%); }
-100%{ transform:translate(calc(-50% + var(--driftX)), -50%); }
-}
-
-.footerNote{font-size:10px; color:var(--dim); text-align:center; margin-top:6px;}
-
-/* ===== FORCE LANDSCAPE ===== */
-.rotateOverlay{
-display:none;
-position:fixed; inset:0; z-index:9999;
-background:radial-gradient(ellipse at center, #14102b, #05050a);
-color:#fff;
-flex-direction:column; align-items:center; justify-content:center;
-text-align:center; gap:14px; padding:30px;
-}
-.rotateOverlay .icon{font-size:54px; animation:rotateHint 1.6s ease-in-out infinite;}
-@keyframes rotateHint{ 0%,100%{transform:rotate(0deg);} 50%{transform:rotate(90deg);} }
-.rotateOverlay h2{font-family:'Cinzel Decorative'; margin:0; font-size:20px; letter-spacing:2px; color:#9d7bff;}
-.rotateOverlay p{margin:0; font-size:12px; color:var(--dim); max-width:280px;}
-@media (orientation:portrait) and (max-width:900px){
-.rotateOverlay{display:flex;}
-.app{display:none;}
-}
-
-/* ===== SAVE BUTTONS + MODAL ===== */
-.saveBtns{display:flex; gap:8px; z-index:1;}
-.saveBtn{
-font-family:'Orbitron'; font-size:10px; font-weight:700; letter-spacing:.5px;
-background:rgba(255,255,255,.04); color:var(--text);
-border:1px solid var(--panel-edge); border-radius:8px;
-padding:7px 12px; cursor:pointer;
-}
-.saveBtn:hover{border-color:var(--accent);}
-
-.modalOverlay{
-position:fixed; inset:0; z-index:9998;
-background:rgba(3,3,8,.78);
-display:none; align-items:center; justify-content:center;
-padding:20px;
-}
-.modalOverlay.show{display:flex;}
-.modalBox{
-width:min(560px, 92vw);
-background:linear-gradient(180deg, var(--panel), #0c0d1c);
-border:1px solid var(--panel-edge);
-border-radius:14px;
-padding:20px;
-box-shadow:0 30px 80px rgba(0,0,0,.6);
-}
-.modalBox h3{margin:0 0 6px 0; font-family:'Orbitron'; font-size:14px; letter-spacing:1px; color:var(--accent-2);}
-.modalBox p{margin:0 0 12px 0; font-size:11px; color:var(--dim);}
-.modalBox textarea{
-width:100%; height:120px; resize:vertical;
-background:#06060e; color:#bfe6ff;
-border:1px solid var(--panel-edge); border-radius:8px;
-padding:10px; font-family:monospace; font-size:11px;
-margin-bottom:12px;
-}
-.modalActions{display:flex; gap:8px; justify-content:flex-end;}
-.modalActions button{
-font-family:'Orbitron'; font-size:11px; font-weight:700;
-padding:8px 16px; border-radius:8px; cursor:pointer; border:none;
-}
-.modalActions .primary{background:linear-gradient(135deg, var(--accent), #5232c9); color:#fff;}
-.modalActions .ghost{background:rgba(255,255,255,.06); color:var(--text); border:1px solid var(--panel-edge);}
-
-/* Starlord's three orbiting Saturn emoji, spinning around the stage text on loop */
-.starlordRing{
-position:absolute; left:50%; top:50%; width:0; height:0;
-animation: spin 6s linear infinite;
-pointer-events:none;
-z-index:4;
-}
-.starlordSat{
-position:absolute; left:0; top:0;
-transform-origin:0 0;
-}
-.starlordSat .inner{
+.passive-badge{
 display:inline-block;
-font-size:26px;
-line-height:1;
-animation: spin 6s linear infinite reverse;
+font-family:'Press Start 2P', monospace;
+font-size:8px;
+color:var(--purple);
+border:1px solid var(--purple);
+border-radius:4px;
+padding:2px 5px;
+margin-left:6px;
+vertical-align:middle;
 }
+.card .passive-line{
+color:var(--purple);
+font-size:13px;
+margin-top:6px;
+padding-top:6px;
+border-top:1px dashed var(--panel-edge);
+line-height:1.3;
+}
+.card .passive-line b{ color:var(--purple); }
+.slot .pstar{
+position:absolute; top:4px; right:6px; font-size:12px; color:var(--purple);
+}
+.passives-panel{
+margin-top:10px;
+background:rgba(154,107,255,.08);
+border:1px solid var(--purple);
+border-radius:8px;
+padding:8px 12px;
+font-size:14px;
+}
+.passives-panel .ptitle{
+font-family:'Press Start 2P', monospace;
+font-size:10px;
+color:var(--purple);
+margin-bottom:6px;
+}
+.passives-panel div.pline{ margin:3px 0; color:var(--text); }
+.passives-panel div.pline b{ color:var(--purple); }
+
+.rarity-guide{
+margin-top:16px;
+text-align:left;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+.rguide-tier{
+background:rgba(0,0,0,.22);
+border:1px solid var(--panel-edge);
+border-radius:8px;
+padding:8px 12px;
+}
+.rguide-tier.locked{ opacity:.4; }
+.rguide-head{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.rguide-head .cost{ margin-left:auto; font-size:12px; color:var(--gold); }
+.rguide-items{ display:flex; flex-wrap:wrap; gap:8px; font-size:14px; }
+.rguide-items span.item{ color:var(--text); }
+.rguide-items span.item.locked-item{ color:var(--dim); }
+.rguide-items span.tg{ color:var(--gold); font-size:11px; }
+
+footer{ text-align:center; color:var(--dim); font-size:12px; margin-top:40px; }
+
+::-webkit-scrollbar{ width:8px; }
+::-webkit-scrollbar-thumb{ background:var(--panel-edge); border-radius:4px; }
 </style>
 </head>
 <body>
-
-<div class="rotateOverlay">
-<div class="icon">⟳</div>
-<h2>ROTATE YOUR DEVICE</h2>
-<p>Chromas RNG is a landscape-only experience. Turn your phone sideways to keep rolling.</p>
+<div id="stage">
+<header>
+<h1 class="arcade">FAZ CLICKER</h1>
+<div class="sub">CLICK. SALVAGE. SURVIVE THE NIGHT SHIFT.</div>
+<div class="save-row">
+<button class="act" id="exportBtn">📤 EXPORT SAVE</button>
+<button class="act" id="importBtn">📥 IMPORT SAVE</button>
 </div>
-
-<div class="app">
-<div class="header">
-<div class="logo">CHROMAS RNG</div>
-<div class="headerStats">
-<div>Rolls<b id="statRolls">0</b></div>
-<div>Luck<b id="statLuck">100%</b></div>
-<div>Best Found<b id="statBest">—</b></div>
-<div>Cooldown<b id="statCd">1.0s</b></div>
-</div>
-<div class="saveBtns">
-<button class="saveBtn" id="exportBtn">Export Save</button>
-<button class="saveBtn" id="importBtn">Import Save</button>
-</div>
-</div>
-
-<!-- LEFT: ODDS -->
-<div class="panel">
-<div class="panelTitle">Aura Odds</div>
-<div class="oddsList" id="oddsList"></div>
-</div>
-
-<!-- CENTER: STAGE -->
-<div class="center">
-<div class="stageWrap" id="stageWrap">
-<div class="stageGrid"></div>
-<div class="fxLayer" id="bgFxLayer"></div>
-<div class="fxLayer" id="particleLayer"></div>
-<div class="potionRow" id="potionRow"></div>
-<div class="auraText" id="auraText">
-<span class="auraSub">Press Roll to Begin</span>
-<span class="auraMainWrap" id="auraMainWrap" style="position:relative; display:inline-block;">
-<span class="r-common" id="auraMain">— — —</span>
-</span>
-</div>
-<div class="equippedRow" id="equippedRow"></div>
-</div>
-
-<div class="controls">
-<button class="rollBtn" id="rollBtn"><div class="barFill" id="rollBar"></div><span id="rollLabel">ROLL</span></button>
-<div class="sideBtns">
-<button class="toggleBtn" id="autoBtn">⟳ AUTO ROLL<span class="bonusBadge" id="autoState">OFF</span></button>
-<div class="toggleBtn" id="bonusBox" style="cursor:default;">
-BONUS ROLL
-<span class="bonusBadge" id="bonusMult"></span>
-</div>
-</div>
-</div>
-
-<div class="slots">
-<div class="slot" id="slotLeft"><small>LEFT GAUNTLET</small><div class="gname">Empty</div></div>
-<div class="slot" id="slotRight"><small>RIGHT GAUNTLET</small><div class="gname">Empty</div></div>
-</div>
-<div class="footerNote">Progress is kept only for this session — it resets if you reload the page.</div>
-</div>
-
-<!-- RIGHT: TABS -->
-<div class="panel rightPanel">
-<div class="tabs">
-<div class="tab active" data-tab="inv">Inventory</div>
-<div class="tab" data-tab="craft">Gauntlets</div>
-<div class="tab" data-tab="potion">Potions</div>
-</div>
-<div class="tabContent" id="tabContent"></div>
-</div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<div class="modalOverlay" id="exportModal">
-<div class="modalBox">
-<h3>EXPORT SAVE CODE</h3>
-<p>Copy this code and store it somewhere safe. Paste it back in via "Import Save" next time to restore your progress.</p>
+<div class="save-panel" id="exportPanel">
+<div class="sp-label">Copy this text and save it somewhere. Paste it back into "Import Save" later to restore your progress.</div>
 <textarea id="exportText" readonly></textarea>
-<div class="modalActions">
-<button class="ghost" id="exportClose">Close</button>
-<button class="primary" id="exportCopy">Copy Code</button>
+<div class="sp-btns">
+<button class="act" id="copyExportBtn">📋 COPY TO CLIPBOARD</button>
+<button class="act" id="closeExportBtn">CLOSE</button>
 </div>
+</div>
+<div class="save-panel" id="importPanel">
+<div class="sp-label">Paste your save text below, then hit Import.</div>
+<textarea id="importText" placeholder="Paste your save JSON here..."></textarea>
+<div class="sp-btns">
+<button class="act gold" id="doImportBtn">IMPORT</button>
+<button class="act" id="closeImportBtn">CLOSE</button>
+</div>
+</div>
+<div id="saveToast"></div>
+</header>
+
+<div class="top-row">
+<div class="stat-box clicks" id="clicksBox">
+<div class="label">CLICKS</div>
+<div class="value" id="clicksVal">0</div>
+<div class="rate" id="clicksRate">+0 / sec</div>
+</div>
+<div class="stat-box tokens" id="tokensBox">
+<div class="label">FAZ TOKENS</div>
+<div class="value" id="tokensVal">0</div>
+<div class="rate" id="tokensRate">upkeep every 10s</div>
 </div>
 </div>
 
-<div class="modalOverlay" id="importModal">
-<div class="modalBox">
-<h3>IMPORT SAVE CODE</h3>
-<p>Paste a previously exported save code below, then load it. This will overwrite your current progress.</p>
-<textarea id="importText" placeholder="Paste your save code here..."></textarea>
-<div class="modalActions">
-<button class="ghost" id="importClose">Cancel</button>
-<button class="primary" id="importLoad">Load Save</button>
-</div>
-</div>
+<div class="mask-wrap">
+<button id="maskBtn" class="ready">🐻</button>
+<div class="mask-hint">Click the mask for <b id="perClickVal">+1</b> FazToken &middot; 1s cooldown</div>
 </div>
 
+<h2 class="section-title">EQUIPPED SLOTS (1-6)</h2>
+<div class="slots" id="slots"></div>
+<div class="passives-panel" id="passivesPanel" style="display:none;">
+<div class="ptitle">★ ACTIVE PASSIVES</div>
+<div id="passivesList"></div>
+</div>
+
+<h2 class="section-title">INVENTORY</h2>
+<div class="grid-cards" id="inventory"></div>
+
+<h2 class="section-title">UPGRADES</h2>
+<div class="upgrades-list" id="upgrades"></div>
+
+<h2 class="section-title">SALVAGE</h2>
+<div class="salvage-panel">
+<div class="luck" id="luckLine">Salvage Luck: 1x</div>
+<div class="salvage-btns">
+<button class="act gold" id="salvageBtn">SALVAGE — 50 Clicks</button>
+</div>
+<div class="locked-note" id="trashNote">Trash Gang units are locked. Buy "Trash Gang's Blessing" to salvage them.</div>
+<div class="salvage-result" id="salvageResult"></div>
+<div class="salvage-log" id="salvageLog"></div>
+<div class="rarity-guide" id="rarityGuide"></div>
+</div>
+
+<footer>FAZ CLICKER — an incremental game. Progress is not saved between sessions.</footer>
+</div>
 
 <script>
-/* ===================== DATA ===================== */
-// rarest -> most common
-const AURAS = [
-{id:'seraphim', name:'Seraphim', denom:200000000, cls:'r-seraphim', fx:'seraphim', big:false},
-{id:'blackhole', name:'Blackhole', denom:100000000, cls:'r-blackhole', fx:'blackhole', big:false, bg:'blackholeBg'},
-{id:'starlord', name:'Starlord', denom:99999999, cls:'r-starlord', fx:'starlord', big:false, bg:'starlordBg'},
-{id:'torment', name:'Torment', denom:50000000, cls:'r-torment', fx:'torment', big:false, bg:'tormentBg', noMove:true, dark:true},
-{id:'crucified', name:'The Crucified', denom:49999999, cls:'r-crucified', fx:'crucified', big:true},
-{id:'destroyer', name:'Destroyer', denom:5000000, cls:'r-destroyer', fx:'destroyer', big:true},
-{id:'soulking', name:'Soul King', denom:850000, cls:'r-soulking', fx:'soulking', big:true},
-{id:'rainbow', name:'Rainbow', denom:99999, cls:'r-rainbow', fx:'rainbow'},
-{id:'galactic', name:'Galactic', denom:30000, cls:'r-galactic', fx:'galactic'},
-{id:'zombie', name:'Zombie', denom:10000, cls:'r-zombie', fx:'zombie'},
-{id:'volcanic', name:'Volcanic', denom:3000, cls:'r-volcanic', fx:'volcanic'},
-{id:'demonic', name:'Demonic', denom:1111, cls:'r-demonic', fx:'demonic'},
-{id:'starstrider', name:'Starstrider', denom:200, cls:'r-starstrider', fx:'starstrider'},
-{id:'dizzy', name:'Dizzy', denom:60, cls:'r-dizzy', fx:'dizzy'},
-{id:'divine', name:'Divine', denom:15, cls:'r-divine', fx:'divine'},
-{id:'epic', name:'Epic', denom:8, cls:'r-epic', fx:'epic'},
-{id:'rare', name:'Rare', denom:4, cls:'r-rare', fx:'rare'},
-{id:'common', name:'Common', denom:2, cls:'r-common', fx:'none'},
-];
-const AURA_BY_ID = Object.fromEntries(AURAS.map(a=>[a.id,a]));
-// index of Soul King in the rarity-ordered list — everything at or before this index is "Soul King or better"
-const SOULKING_INDEX = AURAS.findIndex(a=>a.id==='soulking');
-const SOULKING_OR_BETTER = AURAS.slice(0, SOULKING_INDEX+1);
+/* ============================ DATA ============================ */
 
-// real gauntlet list, ranked by rarity/power
-const GAUNTLET_LIST = [
-{id:'starfall', name:'Starfall Gauntlet', slot:'left-only', req:{starstrider:1000, galactic:10, rainbow:1}, luck:0, bonusOverride:4, desc:'Bonus Roll becomes 4x luck (instead of 2x) on every 10th roll.'},
-{id:'blackholeg', name:'Destroyer Gauntlet', slot:'right-only', req:{destroyer:2, soulking:5, dizzy:1000}, luck:600, cooldown:0.7, desc:'+600% Luck, 0.7s roll cooldown.'},
-// NERFED: Volcanic now just needs a big stack of Volcanics, no Soul King
-{id:'volcanicg', name:'Volcanic Gauntlet', slot:'right-only', req:{volcanic:50}, luck:395, desc:'+395% Luck.'},
-// NERFED: Steampunk no longer needs Rainbow, needs more Zombies
-{id:'steampunk', name:'Steampunk Gauntlet', slot:'right-only', req:{galactic:1, zombie:5}, luck:195, desc:'+195% Luck.'},
-// NERFED: Frosty swaps its Galactic requirement for a Zombie
-{id:'frosty', name:'Frosty Gauntlet', slot:'right-only', req:{zombie:1, starstrider:10}, luck:100, desc:'+100% Luck.'},
-{id:'desire', name:'Desire Gauntlet', slot:'right-only', req:{divine:5, dizzy:1, demonic:1}, luck:50, desc:'+50% Luck.'},
-{id:'lucky', name:'Lucky Gauntlet', slot:'right-only', req:{common:3}, luck:25, desc:'+25% Luck.'},
-];
-const GAUNTLET_BY_ID = Object.fromEntries(GAUNTLET_LIST.map(g=>[g.id,g]));
-// order for crafting display: most powerful first (already roughly so), but let's rank ascending by luck for clarity with starfall last special
-const CRAFT_ORDER = ['lucky','desire','frosty','steampunk','volcanicg','blackholeg','starfall'];
+const RARITY_ORDER = ['rare','epic','legendary','mythical','secret','nightmare'];
+const RARITY_LABEL = {
+rare:'COMMON', epic:'EPIC', legendary:'LEGENDARY', mythical:'MYTHICAL', secret:'SECRET', nightmare:'NIGHTMARE'
+};
+const LUCKY_TIERS = ['legendary','mythical','secret','nightmare'];
 
-/* ===================== POTIONS ===================== */
-const POTIONS = [
-{id:'lucky', name:'Lucky Potion', desc:'+100% Luck for 1 minute.', type:'timed', duration:60, luckPct:100, reqAuras:{common:100}, reqPotions:{}},
-{id:'speedy', name:'Speedy Potion', desc:'-0.1s Roll Cooldown for 1 minute.', type:'timed', duration:60, cooldownDelta:-0.1, reqAuras:{common:100}, reqPotions:{}},
-{id:'transcendent', name:'Transcendent Potion', desc:'+100,000% Luck on your next roll.', type:'instant', luckPct:100000, reqAuras:{rainbow:1, demonic:5, volcanic:2}, reqPotions:{speedy:10, lucky:10}},
-];
-const POTION_BY_ID = Object.fromEntries(POTIONS.map(p=>[p.id,p]));
-const POTION_ORDER = ['lucky','speedy','transcendent'];
+// baseWeight is legacy/unused now — see TIER_PCT below for the actual live salvage odds
+const UNITS = {
+freddy: { name:'Freddy', icon:'🐻', rarity:'rare', baseWeight:40/3, clicks:3, period:1, upkeep:1, desc:'Gives 3 Clicks every second.' },
+chica: { name:'Chica', icon:'🐔', rarity:'rare', baseWeight:40/3, clicks:3, period:1, upkeep:1, desc:'Gives 3 Clicks every second.' },
+bonnie: { name:'Bonnie', icon:'🐰', rarity:'rare', baseWeight:40/3, clicks:3, period:1, upkeep:1, desc:'Gives 3 Clicks every second.' },
+endo01: { name:'Endo-01', icon:'🤖', rarity:'epic', baseWeight:5, clicks:5, period:1, upkeep:1, desc:'Gives 5 Clicks every second.' },
+witheredChica: { name:'Withered Chica', icon:'🍗', rarity:'epic', baseWeight:5, clicks:10, period:1, upkeep:3, desc:'Gives 10 Clicks every second.' },
+bucketBob: { name:'Bucket Bob', icon:'🪣', rarity:'epic', baseWeight:5, clicks:30, period:3, upkeep:5, trash:true, desc:'Gives 30 Clicks every 3 seconds. Trash Gang.' },
+no1Crate: { name:'No.1 Crate', icon:'📦', rarity:'epic', baseWeight:5, clicks:50, period:1, upkeep:15, trash:true, desc:'Gives 50 Clicks every second. Trash Gang.',
+passive:'Upkeep drops to 1 FazToken (from 15) if Trash-O-Tron is equipped.' },
+witheredBonnie:{ name:'Withered Bonnie', icon:'🎸', rarity:'legendary', baseWeight:5/3, clicks:100,period:3.5, upkeep:10, desc:'Gives 100 Clicks every 3.5 seconds.' },
+nightmareFreddy:{name:'Nightmare Freddy', icon:'👹', rarity:'legendary', baseWeight:5/3, clicks:10, period:1, upkeep:1, desc:'Gives 10 Clicks every second.',
+passive:'Every 10th tick, summons 5 Freddles for 30s (10 Clicks every 2s each, free upkeep).' },
+witheredFoxy: { name:'Withered Foxy', icon:'🦴', rarity:'legendary', baseWeight:5/3, clicks:30, period:1, upkeep:999,desc:'Gives 30 Clicks every second.',
+passive:'Upkeep drops to 1 FazToken (from 999) if Withered Bonnie & Withered Chica are both equipped.' },
+puppet: { name:'Puppet', icon:'🎭', rarity:'mythical', baseWeight:0.5, clicks:999,period:8, upkeep:30, desc:'Gives 999 Clicks every 8 seconds.' },
+nightmare: { name:'Nightmare', icon:'😈', rarity:'mythical', baseWeight:0.5, clicks:0, period:1, upkeep:1, desc:'Gives 0 Clicks per second on its own.',
+passive:'Gives 50 Clicks every second instead of 0, but only while Nightmare Freddy is equipped.' },
+witheredFreddy:{ name:'Withered Freddy', icon:'💀', rarity:'secret', baseWeight:0.1/3,clicks:35, period:0.1, upkeep:50, desc:'Gives 35 Clicks every 0.1 seconds.' },
+nightmareMangle:{name:'Nightmare Mangle', icon:'🦑', rarity:'secret', baseWeight:0.1/3,tokens:1, period:1, upkeep:0, desc:'Gives 1 FazToken every second. No upkeep.' },
+trashOTron: { name:'Trash-O-Tron', icon:'🗑️', rarity:'secret', baseWeight:0.1/3,tokens:1, period:1, upkeep:1, trash:true, desc:'Gives 1 FazToken every second (free).',
+passive:'+500% income for all equipped Trash Gang units. Costs 1 FazToken/10s to keep the passive active.' },
+nightmarionne: { name:'Nightmarionne', icon:'🃏', rarity:'nightmare', baseWeight:0.05, clicks:999,period:1, upkeep:25, desc:'Gives 999 Clicks every second.',
+passive:'Jumpscare: all OTHER equipped units have -65% income while Nightmarionne is equipped.' },
+};
 
-/* ===================== STATE ===================== */
+// Clicks cost to Salvage, keyed by the rarest tier reached so far (just a cost-scaling knob)
+const TIER_COST = {
+rare:50, epic:500, legendary:1000, mythical:5000, secret:10000, nightmare:25000
+};
+
+// Fixed percentage share for each rarity TIER as a whole (out of 100%), ALWAYS — every tier and
+// every unit in it is obtainable from the very first Salvage. These do not shift based on
+// progress, what's unlocked, or the rarest tier reached. Luck only reallocates share FROM the
+// lower tiers TO Legendary/Mythical/Secret/Nightmare, and the whole set is always renormalized
+// back to exactly 100%, so the full spread is always rollable — nothing ever locks the pool down
+// to 0%.
+const TIER_PCT = {
+rare:60, epic:30, legendary:6, mythical:2.85, secret:1.1, nightmare:0.05
+};
+
+const UPGRADES = [
+{ id:'tok1', name:'+1 FazTokens per Click', desc:'Mask clicks give +1 FazToken.', currency:'clicks', cost:3, effect:s=>s.tokenPerClickBonus+=1 },
+{ id:'x2click', name:'x2 Clicks', desc:'Sets the Click multiplier to x2.', currency:'clicks', cost:50, effect:s=>s.clickMult=Math.max(s.clickMult,2) },
+{ id:'trash', name:"Trash Gang's Blessing", desc:'Unlocks Trash Gang units from Salvage.', currency:'clicks', cost:300, effect:s=>s.trashUnlocked=true },
+{ id:'luck2', name:'2x Salvage Luck', desc:'Sets Salvage Luck to x2 (Legendary+ only, no stacking).', currency:'clicks', cost:150, effect:s=>s.luck=Math.max(s.luck,2) },
+{ id:'x3click', name:'3x Clicks', desc:'Sets the Click multiplier to x3.', currency:'clicks', cost:450, requires:['x2click'], effect:s=>s.clickMult=Math.max(s.clickMult,3) },
+{ id:'tok3', name:'+3 FazTokens per Click', desc:'Mask clicks give an additional +3 FazTokens.', currency:'clicks', cost:600, effect:s=>s.tokenPerClickBonus+=3 },
+{ id:'batt', name:'Better Batteries', desc:'-5 FazToken upkeep for every unit (minimum 1).', currency:'clicks', cost:900, effect:s=>s.betterBatteries=true },
+{ id:'fazgoo', name:'FazGoo', desc:'Mask clicks give an additional +5 FazTokens.', currency:'tokens', cost:1000, effect:s=>s.tokenPerClickBonus+=5 },
+{ id:'empire', name:'Faz Empire', desc:'Sets the Click multiplier to x5.', currency:'clicks', cost:10000, requires:['x2click','x3click'], effect:s=>s.clickMult=Math.max(s.clickMult,5) },
+{ id:'salvmaster', name:'Salvage Master', desc:'Sets Salvage Luck to x3 (Legendary+ only, no stacking).', currency:'clicks', cost:100000, effect:s=>s.luck=Math.max(s.luck,3) },
+{ id:'foxymask',name:'Foxy Mask', desc:'Mask clicks give an additional +10 FazTokens. Changes the mask to Foxy.', currency:'clicks', cost:250000, effect:s=>{ s.tokenPerClickBonus+=10; s.maskIcon='🦊'; } },
+];
+
+/* ============================ STATE ============================ */
+
 const state = {
-rollCount:0,
-inventory:{}, // auraId -> currently owned count (consumable for crafting)
-totalObtained:{}, // auraId -> total ever obtained
-equippedAuras:new Set(), // ids currently "worn" showcase, stackable
-gauntletsOwned:{}, // gauntletId -> count owned
-equippedLeft:null,
-equippedRight:null,
-potionsOwned:{}, // potionId -> count owned (crafted, unused)
-activePotions:{}, // potionId -> expiresAt (ms timestamp), for timed potions
-pendingNextRoll:0, // luck % bonus queued for the very next roll only (from instant potions)
-transcendentArmed:false, // prevents stacking multiple Transcendent Potions at once
-isRolling:false,
-autoRoll:false,
-bestRarityIndex: AURAS.length, // index into AURAS, lower = rarer; start beyond list
-autoTimer:null,
-currentFallLoop:null, // {interval, type} for the 24/7 falling-particle auras (starlord)
-currentBgFxId:null, // which aura's ambient background fx (rings/halos/glows) is currently built
-wingsBuilt:false, // whether Seraphim's six golden wings are currently rendered
-starlordRingBuilt:false, // whether Starlord's orbiting Saturn ring is currently rendered
-};
-AURAS.forEach(a=>{state.inventory[a.id]=0; state.totalObtained[a.id]=0;});
-GAUNTLET_LIST.forEach(g=>{state.gauntletsOwned[g.id]=0;});
-POTIONS.forEach(p=>{state.potionsOwned[p.id]=0;});
-
-/* ===================== HELPERS ===================== */
-function fmt(n){ return n.toLocaleString('en-US'); }
-function toast(msg){
-const t = document.getElementById('toast');
-t.textContent = msg;
-t.classList.add('show');
-clearTimeout(t._timer);
-t._timer = setTimeout(()=>t.classList.remove('show'), 1800);
-}
-
-function isPotionActive(pid){
-return state.activePotions[pid] && Date.now() < state.activePotions[pid];
-}
-
-function currentLuckMultiplier(bonusActive){
-// Gauntlet luck + Lucky Potion luck stack together and get scaled by the bonus roll multiplier.
-let pct = 0;
-[state.equippedLeft, state.equippedRight].forEach(gid=>{
-if(gid){ pct += GAUNTLET_BY_ID[gid].luck || 0; }
-});
-if(isPotionActive('lucky')) pct += POTION_BY_ID.lucky.luckPct;
-let mult = 1 + pct/100;
-if(bonusActive){
-let starfall = (state.equippedLeft==='starfall'||state.equippedRight==='starfall');
-mult *= starfall ? 4 : 2;
-}
-// Transcendent Potion's flat +100,000% is added AFTER the bonus roll multiplier,
-// so it does not get doubled/quadrupled by a bonus roll — it only stacks with other potions' luck.
-if(state.pendingNextRoll){
-mult += state.pendingNextRoll/100;
-}
-return mult;
-}
-function currentCooldownMs(){
-let cd = 1.0;
-[state.equippedLeft, state.equippedRight].forEach(gid=>{
-if(gid && GAUNTLET_BY_ID[gid].cooldown){ cd = Math.min(cd, GAUNTLET_BY_ID[gid].cooldown); }
-});
-if(isPotionActive('speedy')) cd += POTION_BY_ID.speedy.cooldownDelta;
-cd = Math.max(cd, 0.1);
-return cd*1000;
-}
-
-function rollAura(luckMult){
-for(const a of AURAS){
-// Minimum effective denominator of 2 — no aura can ever exceed 1/2 odds, no matter how much luck is stacked.
-const effDenom = Math.max(2, a.denom / luckMult);
-if(Math.random() < 1/effDenom){
-return a;
-}
-}
-return AURA_BY_ID.common;
-}
-
-// Used by the Transcendent Potion: guarantees something Soul King-rarity or rarer,
-// weighted so rarer-within-that-band auras are still proportionally less likely.
-function rollGuaranteedRareOrBetter(){
-const weights = SOULKING_OR_BETTER.map(a => 1 / a.denom);
-const total = weights.reduce((s,w)=>s+w, 0);
-let r = Math.random() * total;
-for(let i=0;i<SOULKING_OR_BETTER.length;i++){
-r -= weights[i];
-if(r <= 0) return SOULKING_OR_BETTER[i];
-}
-return SOULKING_OR_BETTER[SOULKING_OR_BETTER.length-1]; // fallback: Soul King itself
-}
-
-/* ===================== RENDER: ODDS LIST ===================== */
-function renderOdds(){
-const wrap = document.getElementById('oddsList');
-wrap.innerHTML = '';
-const GLOW_KEEP = ['seraphim','blackhole','starlord'];
-AURAS.forEach(a=>{
-const row = document.createElement('div');
-row.className='oddsRow';
-const nameStyle = GLOW_KEEP.includes(a.id) ? 'font-size:13px;' : 'font-size:13px; text-shadow:none;';
-row.innerHTML = `<span class="nm" style="font-family:inherit;">
-<span class="${a.cls}" style="${nameStyle}">${a.name}</span>
-</span>
-<span class="pc">1/${fmt(a.denom)}</span>
-<span class="ct" id="cnt_${a.id}">x0</span>`;
-wrap.appendChild(row);
-});
-}
-
-/* ===================== RENDER: STAGE ===================== */
-function clearLayer(el){ el.innerHTML=''; }
-
-// Some symbols are full-color emoji (skull, fire, explosion, etc.) that ignore
-// CSS `color`/`text-shadow` entirely. For those we force a color tint with a
-// filter so requests like "turquoise skulls" actually show turquoise.
-const EMOJI_SYMBOLS = new Set(['💀','🔥','💥','🪐','🪽']);
-const EMOJI_TINTS = {
-'#40e0d0':'grayscale(1) brightness(1.5) sepia(1) hue-rotate(140deg) saturate(4)',
-'#7fffd4':'grayscale(1) brightness(1.6) sepia(1) hue-rotate(130deg) saturate(4)',
-'#ffe98a':'grayscale(1) brightness(1.7) sepia(1) saturate(6) hue-rotate(-8deg)',
-'#7ad8ff':'grayscale(1) brightness(1.55) sepia(1) hue-rotate(165deg) saturate(6)',
-};
-function emojiFilterFor(sym, color){
-if(!EMOJI_SYMBOLS.has(sym)) return '';
-const tint = EMOJI_TINTS[color];
-return tint ? `filter:${tint} drop-shadow(0 0 6px ${color});` : '';
-}
-
-function spawnParticles(type, count, colorSet){
-const layer = document.getElementById('particleLayer');
-for(let i=0;i<count;i++){
-const p = document.createElement('div');
-p.className='particle';
-const ang = Math.random()*Math.PI*2;
-const dist = 60+Math.random()*160;
-const dur = 0.7+Math.random()*0.9;
-const size = 10+Math.random()*16;
-const sym = colorSet.sym[Math.floor(Math.random()*colorSet.sym.length)];
-const col = colorSet.colors[Math.floor(Math.random()*colorSet.colors.length)];
-p.textContent = sym;
-p.style.left='50%'; p.style.top='50%';
-p.style.fontSize = size+'px';
-p.style.color = col;
-p.style.textShadow = `0 0 10px ${col}`;
-p.style.cssText += emojiFilterFor(sym, col);
-p.style.transform='translate(-50%,-50%)';
-p.style.opacity='1';
-layer.appendChild(p);
-const dx = Math.cos(ang)*dist, dy=Math.sin(ang)*dist;
-p.animate([
-{transform:'translate(-50%,-50%) scale(.3) rotate(0deg)', opacity:0},
-{transform:`translate(calc(-50% + ${dx*0.3}px), calc(-50% + ${dy*0.3}px)) scale(1.1) rotate(90deg)`, opacity:1, offset:.25},
-{transform:`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.6) rotate(220deg)`, opacity:0}
-], {duration:dur*1000, easing:'ease-out'});
-setTimeout(()=>p.remove(), dur*1000+50);
-}
-}
-
-// Blackhole's signature effect: particles start out scattered around the
-// stage and get pulled INWARD, shrinking and spinning as they vanish into
-// the center — the opposite of the explode-outward effect other auras use.
-// Runs as a persistent loop (like Starlord/Seraphim's falls) so particles are
-// only ever removed once their inward animation actually finishes at the
-// center — never wiped early by an ambient refresh tick.
-function spawnSuckParticle(){
-const layer = document.getElementById('particleLayer');
-const colorSet = FX_PRESETS.blackhole;
-const p = document.createElement('div');
-p.className='particle';
-const ang = Math.random()*Math.PI*2;
-const dist = 90+Math.random()*190;
-const dur = 1300+Math.random()*900;
-const size = 18+Math.random()*24;
-const sym = colorSet.sym[Math.floor(Math.random()*colorSet.sym.length)];
-const col = colorSet.colors[Math.floor(Math.random()*colorSet.colors.length)];
-p.textContent = sym;
-p.style.left='50%'; p.style.top='50%';
-p.style.fontSize = size+'px';
-p.style.color = col;
-p.style.textShadow = `0 0 10px ${col}`;
-p.style.transform='translate(-50%,-50%)';
-p.style.opacity='1';
-layer.appendChild(p);
-const dx = Math.cos(ang)*dist, dy = Math.sin(ang)*dist;
-const anim = p.animate([
-{transform:`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(1) rotate(0deg)`, opacity:1},
-{transform:`translate(calc(-50% + ${dx*0.5}px), calc(-50% + ${dy*0.5}px)) scale(.85) rotate(140deg)`, opacity:1, offset:.4},
-{transform:'translate(-50%,-50%) scale(.05) rotate(340deg)', opacity:0}
-], {duration:dur, easing:'ease-in'});
-// Only removed once it actually reaches the center, never despawned/respawned mid-flight.
-anim.onfinish = ()=>p.remove();
-}
-function startSuckLoop(){
-if(state.currentFallLoop && state.currentFallLoop.type==='blackhole') return; // already running
-stopFallLoop();
-spawnSuckParticle();
-const iv = setInterval(spawnSuckParticle, 260);
-state.currentFallLoop = {interval: iv, type:'blackhole'};
-}
-
-function spawnSpiral(colors){
-// Dizzy's signature spiral.
-const layer = document.getElementById('particleLayer');
-for(let i=0;i<24;i++){
-const p = document.createElement('div');
-p.className='particle';
-p.textContent='●';
-p.style.fontSize=(10+Math.random()*6)+'px';
-p.style.color = colors[i%colors.length];
-p.style.textShadow = `0 0 10px ${colors[0]}`;
-p.style.left='50%'; p.style.top='50%';
-layer.appendChild(p);
-const delay = i*55;
-const dur=1700;
-p.animate([
-{transform:'translate(-50%,-50%) rotate(0deg) translateX(0px)', opacity:0},
-{transform:'translate(-50%,-50%) rotate(360deg) translateX(160px)', opacity:1, offset:.5},
-{transform:'translate(-50%,-50%) rotate(720deg) translateX(280px)', opacity:0}
-], {duration:dur, delay, easing:'ease-in-out'});
-setTimeout(()=>p.remove(), dur+delay+50);
-}
-}
-
-// Galactic aura's signature effect: a swirling, two-directional spiral of little
-// galaxy "stars" — the biggest, widest spiral in the game.
-function spawnGalacticSpiral(){
-const layer = document.getElementById('particleLayer');
-const colors = ['#b07bff','#7c2bff','#5db3ff','#eaf6ff'];
-const symbols = ['✦','✧','●'];
-for(let i=0;i<32;i++){
-const p = document.createElement('div');
-p.className='particle';
-p.textContent = symbols[i%symbols.length];
-const col = colors[i%colors.length];
-p.style.fontSize = (8+Math.random()*12)+'px';
-p.style.color = col;
-p.style.textShadow = `0 0 8px ${col}`;
-p.style.left='50%'; p.style.top='50%';
-layer.appendChild(p);
-const delay = i*50;
-const dur = 1700+Math.random()*400;
-const dir = i%2===0 ? 1 : -1;
-p.animate([
-{transform:'translate(-50%,-50%) rotate(0deg) translateX(0px)', opacity:0},
-{transform:`translate(-50%,-50%) rotate(${360*dir}deg) translateX(190px)`, opacity:1, offset:.5},
-{transform:`translate(-50%,-50%) rotate(${720*dir}deg) translateX(340px)`, opacity:0}
-], {duration:dur, delay, easing:'ease-in-out'});
-setTimeout(()=>p.remove(), dur+delay+50);
-}
-}
-
-const FX_PRESETS = {
-none:null,
-rare:{sym:['✦','✧'], colors:['#5db3ff','#9fd6ff']},
-epic:{sym:['✧','✦'], colors:['#c084ff','#9b3bff']},
-divine:{sym:['✚','✛'], colors:['#fff3b0','#ffe066']},
-starstrider:{sym:['★','✦'], colors:['#eaf6ff','#9fd8ff']},
-demonic:{sym:['💥','✺'], colors:['#ff3636','#ff8a00']},
-volcanic:{sym:['🔥','✺'], colors:['#ff8a2b','#ff4500']},
-zombie:{sym:['☣','✚'], colors:['#79e35a','#2f8f1c']},
-galactic:{sym:['✦','◆'], colors:['#b07bff','#7c2bff']},
-rainbow:{sym:['✦','✧','★'], colors:['#ff0044','#ff8800','#ffee00','#22ff66','#22aaff','#aa44ff']},
-soulking:{sym:['💀'], colors:['#40e0d0','#7fffd4']},
-destroyer:{sym:['✖','💢'], colors:['#ff1a1a','#960000']},
-crucified:{sym:['✝'], colors:['#ffe9b0','#ffb347']},
-blackhole:{sym:['●'], colors:['#ff7b00','#ffae42','#1a1a1a']},
-starlord:{sym:['★','✦','✧'], colors:['#7ad8ff','#2bb2ff','#ffffff']},
-seraphim:{sym:['✦','✧','◆'], colors:['#fff8dc','#ffe066','#ffffff']},
-torment:{sym:['▓','▒','░'], colors:['#8a8a8a','#4d4d4d','#1a1a1a']},
-dizzy:{sym:['●','✦'], colors:['#c79356','#a9713a','#7a4a1f']},
+clicks:0,
+tokens:0,
+clickMult:1,
+luck:1,
+tokenPerClickBonus:0,
+trashUnlocked:false,
+betterBatteries:false,
+maskIcon:'🐻',
+upgradesOwned:{},
+inventory:{ freddy:1 }, // unit id -> count owned (not equipped)
+slots:[null,null,null,null,null,null], // unit id or null
+unpowered:{}, // unit id -> bool (failed last upkeep)
+freddles:[], // {expires, timer}
+nfTickCount:0,
+rarestTier:0, // index into RARITY_ORDER of the highest rarity tier obtained so far (display/cost only)
 };
 
-// Auras whose signature effect is a continuous, non-despawning stream of particles
-// that only disappear once they finish their journey (reaching the bottom of the
-// stage box for falls, or the exact center for Blackhole's inward pull).
-const CONTINUOUS_FALL_TYPES = ['starlord','seraphim','blackhole'];
+/* accumulators for production timing, per unit id */
+const accum = {};
+Object.keys(UNITS).forEach(id=>accum[id]=0);
+let freddleAccum = 0;
 
-function spawnFallLoopParticle(type){
-const layer = document.getElementById('particleLayer');
-const stage = document.getElementById('stageWrap');
-const h = stage.offsetHeight || 340;
-let sym, colorPalette, size, dur;
-if(type==='seraphim'){
-// Light yellow crosses falling straight down, with the occasional sparkle
-// particle mixed in, until they reach the bottom border of the box.
-const roll = Math.random();
-if(roll < 0.55){ sym = '✝'; size = 12+Math.random()*16; }
-else { sym = ['✦','✧','◆'][Math.floor(Math.random()*3)]; size = 8+Math.random()*10; }
-colorPalette = ['#ffe98a'];
-dur = 4200+Math.random()*3800;
+/* ============================ HELPERS ============================ */
+
+function fmt(n){
+n = Math.floor(n);
+if(n < 1000) return n.toString();
+const units = [ [1e12,'T'],[1e9,'B'],[1e6,'M'],[1e3,'K'] ];
+for(const [val,suf] of units){
+if(n >= val){
+return (n/val).toFixed(2).replace(/\.00$/,'') + suf;
+}
+}
+return n.toString();
+}
+
+function isEquipped(id){ return state.slots.includes(id); }
+
+function equippedIds(){ return state.slots.filter(x=>x); }
+
+function perClickTokens(){ return 1 + state.tokenPerClickBonus; }
+
+function upgradeOwned(id){ return !!state.upgradesOwned[id]; }
+
+function popFloat(container, text, cls){
+const el = document.createElement('div');
+el.className = 'float-pop';
+if(cls) el.style.color = cls;
+el.textContent = text;
+container.appendChild(el);
+setTimeout(()=>el.remove(), 950);
+}
+
+function pulse(el){
+el.classList.remove('pulse');
+void el.offsetWidth;
+el.classList.add('pulse');
+}
+
+/* ============================ PRODUCTION ============================ */
+
+function upkeepCost(id){
+const def = UNITS[id];
+let cost = def.upkeep;
+if(id === 'no1Crate' && state.slots.includes('trashOTron')) cost = 1;
+if(id === 'witheredFoxy' && state.slots.includes('witheredBonnie') && state.slots.includes('witheredChica')) cost = 1;
+if(state.betterBatteries) cost = Math.max(1, cost - 5);
+return cost;
+}
+
+function runUpkeep(){
+equippedIds().forEach(id=>{
+const cost = upkeepCost(id);
+if(cost <= 0){ state.unpowered[id]=false; return; }
+if(state.tokens >= cost){
+state.tokens -= cost;
+state.unpowered[id] = false;
 } else {
-// starlord — falling stars
-sym = Math.random()<0.6 ? '★' : '✦';
-colorPalette = ['#7ad8ff','#ffffff','#2bb2ff'];
-size = 8+Math.random()*14;
-dur = 3000+Math.random()*3500;
+state.unpowered[id] = true;
 }
-const p = document.createElement('div');
-p.className='particle';
-p.textContent = sym;
-const col = colorPalette[Math.floor(Math.random()*colorPalette.length)];
-const startX = Math.random()*100;
-p.style.cssText = `font-size:${size}px; color:${col}; text-shadow:0 0 8px ${col}; left:${startX}%; top:-14px; position:absolute; opacity:0;`;
-layer.appendChild(p);
-const swing = (Math.random()-.5)*30;
-const keyframes = [
-{transform:'translateY(0px) translateX(0px) rotate(0deg)', opacity:0},
-{opacity:1, offset:0.08},
-{transform:`translateY(${h*0.5}px) translateX(${swing}px) rotate(${swing*0.5}deg)`, opacity:1, offset:0.6},
-{transform:`translateY(${h+16}px) translateX(${swing*1.5}px) rotate(${swing}deg)`, opacity:1}
-];
-const anim = p.animate(keyframes, {duration:dur, easing:'linear'});
-// Only removed once the fall animation completes (i.e. it has reached the bottom) —
-// never fades out or despawns early.
-anim.onfinish = ()=>p.remove();
+});
+renderStats();
+renderSlots();
 }
 
-function startFallLoop(type){
-if(state.currentFallLoop && state.currentFallLoop.type===type) return; // already running, don't restart
-stopFallLoop();
-spawnFallLoopParticle(type);
-const spawnEvery = 320;
-const iv = setInterval(()=>spawnFallLoopParticle(type), spawnEvery);
-state.currentFallLoop = {interval: iv, type};
-}
-function stopFallLoop(){
-if(state.currentFallLoop){
-clearInterval(state.currentFallLoop.interval);
-state.currentFallLoop = null;
-}
+function addClicks(amount){
+if(amount <= 0) return;
+state.clicks += amount;
 }
 
-function triggerEffect(a){
-const bgLayer = document.getElementById('bgFxLayer');
-const isContinuous = CONTINUOUS_FALL_TYPES.includes(a.id);
-const alreadyLooping = isContinuous && state.currentFallLoop && state.currentFallLoop.type===a.id;
-// Ambient background fx (rings/halos/glows) are only rebuilt when the displayed
-// aura actually changes, so any CSS animation on them (e.g. a rotating ring)
-// plays as one continuous, endless loop instead of restarting on every tick.
-const bgAlreadyBuilt = state.currentBgFxId === a.id;
-
-// Only wipe the particle layer if we're not already mid-loop for this same aura —
-// this is what lets the continuous falls run 24/7 without being cut off every tick.
-if(!alreadyLooping){
-clearLayer(document.getElementById('particleLayer'));
-}
-if(!isContinuous){
-stopFallLoop();
-}
-if(!bgAlreadyBuilt){
-clearLayer(bgLayer);
+function addTokens(amount){
+if(amount <= 0) return;
+state.tokens += amount;
 }
 
-// background ambient fx
-if(!bgAlreadyBuilt){
-if(a.id==='blackhole'){
-// Static black hole circle — dark swirling rings, no rotation
-const div = document.createElement('div');
-div.className='bgFx show';
-div.style.cssText=`
-position:absolute; left:50%; top:50%;
-width:320px; height:320px;
-transform:translate(-50%,-50%);
-border-radius:50%;
-background: radial-gradient(circle at 50% 50%,
-#000 0%,
-#0a0a0a 18%,
-#1a0500 32%,
-#3d1200 44%,
-#6e2a00 54%,
-#ff7b00 62%,
-#ffae42 68%,
-#fff3b0 74%,
-transparent 82%
-);
-box-shadow: 0 0 60px 30px rgba(255,120,0,.25), 0 0 120px 60px rgba(255,80,0,.1);
-pointer-events:none;
-`;
-bgLayer.appendChild(div);
-// gravitational lensing ring
-const ring = document.createElement('div');
-ring.className='bgFx show';
-ring.style.cssText=`
-position:absolute; left:50%; top:50%;
-width:340px; height:340px;
-transform:translate(-50%,-50%);
-border-radius:50%;
-border:3px solid rgba(255,160,0,.3);
-box-shadow: inset 0 0 30px rgba(255,100,0,.2), 0 0 40px rgba(255,120,0,.2);
-pointer-events:none;
-`;
-bgLayer.appendChild(ring);
-} else if(a.id==='starlord'){
-// Deep blue radial background
-const div = document.createElement('div');
-div.className='bgFx show';
-div.style.cssText='position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, #062040 0%, #021024 55%, #010810 100%);';
-bgLayer.appendChild(div);
-} else if(a.id==='seraphim'){
-// Darker amber heavenly fog: several soft, irregular blurred cloud
-// patches placed at random positions each time, drifting slowly side to
-// side and fading in/out on staggered timers so the fog never fully
-// vanishes all at once — like it's breathing and rolling through.
-const fogCount = 7 + Math.floor(Math.random()*3); // 7-9 patches
-for(let i=0;i<fogCount;i++){
-const x = 5 + Math.random()*90;
-const y = 8 + Math.random()*84;
-const w = 260 + Math.random()*340;
-const h = 130 + Math.random()*220;
-const dur = 6 + Math.random()*6;
-const delay = Math.random()*6;
-const driftX = 15 + Math.random()*45;
-const r1 = 40+Math.random()*20, r2 = 40+Math.random()*20, r3 = 40+Math.random()*20, r4 = 40+Math.random()*20;
-const fog = document.createElement('div');
-fog.className='bgFx show';
-fog.style.cssText=`
-position:absolute; left:${x}%; top:${y}%; width:${w}px; height:${h}px;
-border-radius:${r1}% ${100-r1}% ${r3}% ${100-r3}%/${r2}% ${r4}% ${100-r4}% ${100-r2}%;
-background: radial-gradient(circle, rgba(150,110,45,.55) 0%, rgba(95,68,25,.32) 45%, transparent 75%);
-filter: blur(20px);
-animation: fogDrift ${dur}s ease-in-out infinite alternate, fogPulse ${dur+2.5}s ease-in-out infinite;
-animation-delay: ${delay}s, ${delay}s;
---driftX: ${driftX}px;
-pointer-events:none;
-`;
-bgLayer.appendChild(fog);
+function unitOutputMultiplier(id){
+// trash gang boost from Trash-O-Tron
+let m = 1;
+const def = UNITS[id];
+if(def.trash && state.slots.includes('trashOTron') && !state.unpowered['trashOTron']){
+m *= 6; // +500%
 }
-} else if(a.id==='torment'){
-const div = document.createElement('div');
-div.className='bgFx show';
-div.style.cssText='position:absolute;inset:0;background:repeating-linear-gradient(180deg, rgba(0,0,0,.5) 0 4px, transparent 4px 8px); opacity:.4;';
-bgLayer.appendChild(div);
-} else if(a.id==='rainbow'){
-// Rainbow's ambient effect: just a stationary color-wheel ring fixed in
-// place around the text (the big blurred spiral glow has been removed).
-const ring = document.createElement('div');
-ring.className='bgFx show';
-ring.style.cssText='position:absolute;left:50%;top:50%;width:260px;height:260px;transform:translate(-50%,-50%);border-radius:50%;border:4px solid transparent;background:conic-gradient(red,orange,yellow,green,cyan,blue,violet,red) border-box;-webkit-mask:linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.7;';
-bgLayer.appendChild(ring);
-} else if(a.id==='galactic'){
-// Galactic's ambient effect: a soft wide nebula glow behind a brighter
-// core, plus a scatter of tiny background stars (some tinted lavender)
-// for a bit more depth — still just three simple layers.
-const outerGlow = document.createElement('div');
-outerGlow.className='bgFx show';
-outerGlow.style.cssText=`
-position:absolute; left:50%; top:50%; width:280px; height:280px;
-transform:translate(-50%,-50%); border-radius:50%;
-background: radial-gradient(circle, rgba(176,123,255,.4) 0%, rgba(124,43,255,.2) 45%, transparent 72%);
-filter: blur(20px);
-opacity:.9;
-pointer-events:none;
-`;
-bgLayer.appendChild(outerGlow);
-
-const core = document.createElement('div');
-core.className='bgFx show';
-core.style.cssText=`
-position:absolute; left:50%; top:50%; width:120px; height:120px;
-transform:translate(-50%,-50%); border-radius:50%;
-background: radial-gradient(circle, #ffffff 0%, #eaf6ff 30%, #b07bff 65%, transparent 80%);
-filter: blur(6px);
-opacity:.9;
-pointer-events:none;
-`;
-bgLayer.appendChild(core);
-
-const stars = document.createElement('div');
-stars.className='bgFx show';
-let shadows = [];
-for(let i=0;i<70;i++){
-const sx = Math.round(Math.random()*420-210);
-const sy = Math.round(Math.random()*420-210);
-const op = (0.3+Math.random()*0.7).toFixed(2);
-const tint = Math.random()<0.3 ? `rgba(200,170,255,${op})` : `rgba(255,255,255,${op})`;
-shadows.push(`${sx}px ${sy}px 0 ${tint}`);
+// nightmarionne debuff to all OTHER units
+if(id !== 'nightmarionne' && state.slots.includes('nightmarionne') && !state.unpowered['nightmarionne']){
+m *= 0.35; // -65%
 }
-stars.style.cssText=`
-position:absolute; left:50%; top:50%; width:2px; height:2px;
-border-radius:50%;
-box-shadow:${shadows.join(',')};
--webkit-mask-image:radial-gradient(circle 220px at center, black, transparent 100%);
-mask-image:radial-gradient(circle 220px at center, black, transparent 100%);
-pointer-events:none;
-`;
-bgLayer.appendChild(stars);
-} else if(a.id==='soulking'){
-// Turquoise flame lick rising along the bottom edge of the box.
-const flameCount = 12;
-for(let i=0;i<flameCount;i++){
-const leftPct = 3 + (i/(flameCount-1))*94;
-const w = 20+Math.random()*18;
-const h2 = 46+Math.random()*40;
-const flame = document.createElement('div');
-flame.className='soulFlame';
-flame.style.cssText=`
-left:${leftPct}%; width:${w}px; height:${h2}px; margin-left:-${w/2}px;
-animation-duration:${(0.7+Math.random()*0.6).toFixed(2)}s;
-animation-delay:${(Math.random()*0.8).toFixed(2)}s;
-`;
-bgLayer.appendChild(flame);
-}
-} else if(a.id==='crucified'){
-// A giant glowing cross in Crucified's own gold color, centered behind the text.
-const cross = document.createElement('div');
-cross.className='crucifiedCross';
-cross.innerHTML = `<div class="beam vert"></div><div class="beam horiz"></div>`;
-bgLayer.appendChild(cross);
-}
-state.currentBgFxId = a.id;
+return m;
 }
 
-// Starlord/Seraphim run a persistent falling-particle loop, and Blackhole runs
-// a persistent inward-suck loop, instead of one-off bursts — particles only
-// despawn once they actually finish their journey (bottom of box, or center).
-if(isContinuous){
-if(a.id==='blackhole') startSuckLoop();
-else startFallLoop(a.id);
-return;
+function tickProduction(dt){
+equippedIds().forEach(id=>{
+if(state.unpowered[id]) return;
+const def = UNITS[id];
+if(!def.period) return;
+accum[id] += dt;
+let guard = 0;
+while(accum[id] >= def.period && guard < 500){
+accum[id] -= def.period;
+guard++;
+produceOnce(id, def);
 }
-
-if(a.fx==='dizzy'){
-spawnSpiral(['#c79356','#7a4a1f','#a9713a']);
-} else if(FX_PRESETS[a.fx]){
-let count = 16;
-if(['crucified','destroyer','soulking','torment'].includes(a.id)) count=26;
-spawnParticles(a.fx, count, FX_PRESETS[a.fx]);
-if(['soulking','destroyer','crucified','torment'].includes(a.id)){
-setTimeout(()=>spawnParticles(a.fx, Math.round(count*0.6), FX_PRESETS[a.fx]), 400);
-}
-}
-}
-
-function renderAuraOnStage(a, label){
-state.stageAura = a;
-const sub = document.getElementById('auraText').querySelector('.auraSub');
-const main = document.getElementById('auraMain');
-let subLabel = label || 'YOU GOT';
-// The ambient showcase never displays the "EQUIPPED" caption, for any aura.
-if(subLabel==='EQUIPPED') subLabel = '';
-sub.textContent = subLabel;
-// Seraphim's stage text (label + name) is entirely light yellow, not just the name.
-if(a.id==='seraphim'){
-sub.style.color = '#fff176';
-sub.style.textShadow = '0 0 10px #ffe066';
-} else {
-sub.style.color = '';
-sub.style.textShadow = '';
-}
-main.className = a.cls;
-main.classList.remove('moveText','glitch','seraphBreathe');
-main.textContent = a.name;
-// Crucified and Rainbow keep their titles stationary — everything else that's
-// flagged "big" (and isn't Starlord, which has its own always-on drift) still moves.
-if(a.big) main.classList.add('moveText');
-if(a.id==='torment') main.classList.add('glitch');
-if(a.id==='seraphim') main.classList.add('seraphBreathe');
-
-if(a.id==='seraphim'){
-if(!state.wingsBuilt){ buildSeraphimWings(); state.wingsBuilt = true; }
-} else if(state.wingsBuilt){
-clearSeraphimWings();
-state.wingsBuilt = false;
-}
-
-if(a.id==='starlord'){
-if(!state.starlordRingBuilt){ buildStarlordRing(); state.starlordRingBuilt = true; }
-} else if(state.starlordRingBuilt){
-clearStarlordRing();
-state.starlordRingBuilt = false;
-}
-
-triggerEffect(a);
-}
-
-// Seraphim's signature look: a ring of many small eyes — pure white sclera,
-// a small blue iris/pupil, nothing else — chained together around the stage
-// title with thin connecting lines so the whole cluster reads as one linked
-// mass of eyes (per the classic many-eyed seraphim/ophanim imagery). Built
-// as a single SVG so the eyes and the lines between them are guaranteed to
-// line up, and the whole ring spins together as one rigid piece.
-function buildSeraphimWings(){
-clearSeraphimWings();
-const container = document.getElementById('auraMainWrap');
-if(!container) return;
-const wrap = document.createElement('div');
-wrap.className='seraphWingRing';
-wrap.style.width='380px';
-wrap.style.height='380px';
-wrap.style.marginLeft='-190px';
-wrap.style.marginTop='-190px';
-
-const N = 16; // total number of eyes
-const R = 140; // orbit radius, kept wide of the title text
-const cx = 190, cy = 190;
-const pts = [];
-for(let i=0;i<N;i++){
-const ang = (i/N)*Math.PI*2;
-pts.push({x:cx+R*Math.cos(ang), y:cy+R*Math.sin(ang), ang});
-}
-
-let linesSVG = '';
-// neighbor-to-neighbor ring connections so every eye is chained to the next
-for(let i=0;i<N;i++){
-const a = pts[i], b = pts[(i+1)%N];
-linesSVG += `<line x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}" stroke="#d7defa" stroke-width="1.4" opacity="0.55"/>`;
-}
-
-let eyesSVG = '';
-pts.forEach((p,i)=>{
-const rot = (p.ang*180/Math.PI)+90; // orient each eye tangent to the ring, like they're chained edge to edge
-const rx = 14 + (i%3)*2;
-const ry = rx*0.62;
-const irisR = rx*0.34;
-const pupilR = irisR*0.42;
-eyesSVG += `
-<g transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) rotate(${rot.toFixed(1)})">
-<ellipse cx="0" cy="0" rx="${rx}" ry="${ry}" fill="#ffffff" stroke="#c7cbe0" stroke-width="1.1"/>
-<circle cx="0" cy="0" r="${irisR.toFixed(1)}" fill="#2f6fe0"/>
-<circle cx="0" cy="0" r="${pupilR.toFixed(1)}" fill="#08122a"/>
-<circle cx="${(-irisR*0.35).toFixed(1)}" cy="${(-irisR*0.35).toFixed(1)}" r="${(irisR*0.22).toFixed(1)}" fill="#ffffff" opacity="0.9"/>
-</g>`;
 });
 
-wrap.innerHTML = `<svg viewBox="0 0 380 380" width="380" height="380" xmlns="http://www.w3.org/2000/svg" style="overflow:visible; filter:drop-shadow(0 0 6px rgba(255,224,102,.4));">
-<g>${linesSVG}</g>
-<g>${eyesSVG}</g>
-</svg>`;
-container.appendChild(wrap);
+// freddles
+if(state.freddles.length){
+freddleAccum += dt;
+while(freddleAccum >= 2){
+freddleAccum -= 2;
+const now = Date.now();
+const alive = state.freddles.filter(f=>f.expires > now);
+alive.forEach(()=> addClicks(10 * state.clickMult));
 }
-function clearSeraphimWings(){
-document.querySelectorAll('.seraphWingRing').forEach(w=>w.remove());
+state.freddles = state.freddles.filter(f=>f.expires > Date.now());
+}
 }
 
-// Starlord's three Saturn emoji, tinted to match the Starlord title color,
-// orbiting endlessly around the stage title text on a continuous loop. The
-// orbit radius is kept wide so the Saturns never overlap the "Starlord" text.
-function buildStarlordRing(){
-clearStarlordRing();
-const container = document.getElementById('auraMainWrap');
-if(!container) return;
-const ring = document.createElement('div');
-ring.className='starlordRing';
-const radius = 150;
-for(let i=0;i<3;i++){
-const angle = i*120;
-const sat = document.createElement('div');
-sat.className='starlordSat';
-sat.style.transform = `rotate(${angle}deg) translate(${radius}px,0) translate(-50%,-50%)`;
-const inner = document.createElement('span');
-inner.className='inner';
-inner.textContent = '🪐';
-inner.style.cssText += emojiFilterFor('🪐','#7ad8ff');
-sat.appendChild(inner);
-ring.appendChild(sat);
+function produceOnce(id, def){
+const mult = unitOutputMultiplier(id);
+if(def.clicks !== undefined){
+let amt = def.clicks;
+if(id === 'nightmare'){
+amt = state.slots.includes('nightmareFreddy') && !state.unpowered['nightmareFreddy'] ? 50 : 0;
 }
-container.appendChild(ring);
+addClicks(amt * state.clickMult * mult);
 }
-function clearStarlordRing(){
-document.querySelectorAll('.starlordRing').forEach(w=>w.remove());
+if(def.tokens !== undefined){
+addTokens(def.tokens * mult);
+}
+if(id === 'nightmareFreddy'){
+state.nfTickCount++;
+if(state.nfTickCount % 10 === 0){
+state.freddles.push({ expires: Date.now() + 30000 });
+state.freddles.push({ expires: Date.now() + 30000 });
+state.freddles.push({ expires: Date.now() + 30000 });
+state.freddles.push({ expires: Date.now() + 30000 });
+state.freddles.push({ expires: Date.now() + 30000 });
+}
+}
 }
 
-/* keep whatever is on stage alive permanently (re-spawn its particles),
-and rotate through any equipped auras so their effects stay showing */
-function ambientTick(){
-renderPotionRow();
-if(state.isRolling) return;
-if(state._holdUntil && Date.now() < state._holdUntil) return;
-if(state.equippedAuras.size > 0){
-const arr = Array.from(state.equippedAuras);
-state._ambientCounter = (state._ambientCounter||0) + 1;
-const needSwitch = !state.stageAura || !arr.includes(state.stageAura.id) || (state._ambientCounter % 3 === 0);
-if(needSwitch){
-state.ambientIndex = (state.ambientIndex===undefined ? -1 : state.ambientIndex) + 1;
-if(state.ambientIndex >= arr.length) state.ambientIndex = 0;
-const a = AURA_BY_ID[arr[state.ambientIndex]];
-renderAuraOnStage(a, 'EQUIPPED');
-return;
+function currentClicksPerSec(){
+let total = 0;
+equippedIds().forEach(id=>{
+if(state.unpowered[id]) return;
+const def = UNITS[id];
+if(def.clicks === undefined) return;
+let amt = def.clicks;
+if(id === 'nightmare'){
+amt = state.slots.includes('nightmareFreddy') && !state.unpowered['nightmareFreddy'] ? 50 : 0;
 }
-}
-if(state.stageAura){
-triggerEffect(state.stageAura);
-}
-}
-setInterval(ambientTick, 900);
-
-/* ===================== ROLL LOGIC ===================== */
-function updateBonusDisplay(overrideActive){
-// next bonus fires on the roll where (rollCount+1) % 10 === 0
-const nextBonusAt = Math.ceil((state.rollCount + 1) / 10) * 10;
-const rollsUntil = nextBonusAt - state.rollCount;
-const isNext = rollsUntil === 1;
-const showActive = overrideActive || false;
-
-const starfall = (state.equippedLeft==='starfall' || state.equippedRight==='starfall');
-document.getElementById('bonusMult').textContent = starfall ? '4x Luck' : '2x Luck';
-
-document.getElementById('bonusBox').classList.toggle('bonusReady', isNext || showActive);
-document.getElementById('rollBtn').classList.toggle('rollBtnBonus', isNext && !state.isRolling);
-document.getElementById('statLuck').textContent = Math.round(currentLuckMultiplier(isNext)*100)+'%';
-}
-
-function doRoll(){
-if(state.isRolling) return;
-state.isRolling = true;
-const btn = document.getElementById('rollBtn');
-const bar = document.getElementById('rollBar');
-const label = document.getElementById('rollLabel');
-btn.disabled = true;
-
-const cdMs = currentCooldownMs();
-const startRollIdx = state.rollCount + 1;
-const bonusActive = (startRollIdx % 10 === 0);
-const luckMult = currentLuckMultiplier(bonusActive);
-const transcendentUsed = state.pendingNextRoll > 0;
-
-label.textContent = bonusActive ? 'ROLLING... (BONUS!)' : 'ROLLING...';
-if(bonusActive) updateBonusDisplay(true);
-document.getElementById('rollBtn').classList.remove('rollBtnBonus');
-bar.style.transition = 'none';
-bar.style.width='0%';
-requestAnimationFrame(()=>{
-bar.style.transition = `width ${cdMs}ms linear`;
-bar.style.width='100%';
+const mult = unitOutputMultiplier(id);
+total += (amt / def.period) * state.clickMult * mult;
 });
+if(state.freddles.length){
+total += state.freddles.length * (10/2) * state.clickMult;
+}
+return total;
+}
 
-// flicker random names during cooldown
-const mainEl = document.getElementById('auraMain');
-const subEl = document.querySelector('.auraSub');
-subEl.textContent = bonusActive ? 'BONUS ROLL!' : 'ROLLING';
-clearLayer(document.getElementById('particleLayer'));
-clearLayer(document.getElementById('bgFxLayer'));
-state.currentBgFxId = null;
-clearSeraphimWings();
-state.wingsBuilt = false;
-clearStarlordRing();
-state.starlordRingBuilt = false;
-stopFallLoop();
-let flickerCount = 0;
-const flickerInterval = setInterval(()=>{
-const rnd = AURAS[Math.floor(Math.random()*AURAS.length)];
-mainEl.className = rnd.cls;
-mainEl.classList.remove('moveText','glitch');
-mainEl.textContent = rnd.name;
-flickerCount++;
-}, 70);
+/* ============================ MASK CLICK ============================ */
 
+let maskReady = true;
+const maskBtn = document.getElementById('maskBtn');
+
+maskBtn.addEventListener('click', ()=>{
+if(!maskReady) return;
+const amt = perClickTokens();
+addTokens(amt);
+popFloat(document.getElementById('tokensBox'), '+'+fmt(amt), 'var(--gold)');
+pulse(document.getElementById('tokensVal'));
+renderStats();
+maskReady = false;
+maskBtn.classList.remove('ready');
+maskBtn.classList.add('cooling');
 setTimeout(()=>{
-clearInterval(flickerInterval);
-state.rollCount++;
-const result = transcendentUsed ? rollGuaranteedRareOrBetter() : rollAura(luckMult);
-state.inventory[result.id]++;
-state.totalObtained[result.id]++;
-const idx = AURAS.findIndex(x=>x.id===result.id);
-if(idx < state.bestRarityIndex){
-state.bestRarityIndex = idx;
-document.getElementById('statBest').textContent = result.name;
-}
-renderAuraOnStage(result, bonusActive ? 'BONUS ROLL — YOU GOT' : 'YOU GOT');
-state._holdUntil = Date.now() + 1800; // keep showing the actual roll result briefly before equipped display takes back over
-toast('Obtained '+result.name+'! (Owned: '+state.inventory[result.id]+' • Total: '+state.totalObtained[result.id]+')'+(transcendentUsed?' [Transcendent Potion consumed]':''));
-if(transcendentUsed){ state.pendingNextRoll = 0; state.transcendentArmed = false; }
-updateAllCounters();
-updateBonusDisplay();
-document.getElementById('statRolls').textContent = fmt(state.rollCount);
-
-btn.disabled = false;
-label.textContent = 'ROLL';
-state.isRolling = false;
-
-if(state.autoRoll){
-state.autoTimer = setTimeout(doRoll, 60);
-}
-}, cdMs);
-}
-
-/* ===================== INVENTORY / EQUIP AURAS ===================== */
-function updateAllCounters(){
-AURAS.forEach(a=>{
-const el = document.getElementById('cnt_'+a.id);
-if(el) el.textContent = 'x'+state.totalObtained[a.id];
+maskReady = true;
+maskBtn.classList.add('ready');
+maskBtn.classList.remove('cooling');
+}, 1000);
 });
-renderTab();
-renderEquippedRow();
-renderPotionRow();
+
+/* ============================ SALVAGE ============================ */
+
+function salvageCost(){
+return TIER_COST[RARITY_ORDER[state.rarestTier]];
 }
 
-function updateStageTheme(){
-const stage = document.getElementById('stageWrap');
-stage.classList.toggle('stageSeraphim', state.equippedAuras.has('seraphim'));
-}
-
-function renderEquippedRow(){
-const row = document.getElementById('equippedRow');
-row.innerHTML='';
-state.equippedAuras.forEach(id=>{
-const a = AURA_BY_ID[id];
-const chip = document.createElement('div');
-chip.className='equippedChip';
-// Blackhole's dark fill needs its own glow to read at small sizes, so keep
-// its text-shadow instead of stripping it like the other compact auras.
-const nameStyle = (a.id==='blackhole') ? 'font-size:11px;' : 'font-size:11px; text-shadow:none;';
-chip.innerHTML = `<span class="${a.cls}" style="${nameStyle}">${a.name}</span>`;
-row.appendChild(chip);
+// Groups every unit by tier. Every tier is always obtainable from the start — the only gate is
+// Trash Gang units needing the blessing upgrade.
+function obtainablePool(){
+const byTier = {};
+RARITY_ORDER.forEach(t=>byTier[t]=[]);
+Object.entries(UNITS).forEach(([id,def])=>{
+if(def.trash && !state.trashUnlocked) return;
+byTier[def.rarity].push(id);
 });
+return byTier;
 }
 
-function renderPotionRow(){
-const row = document.getElementById('potionRow');
-if(!row) return;
-row.innerHTML='';
-POTION_ORDER.forEach(pid=>{
-if(isPotionActive(pid)){
-const secs = Math.max(0, Math.ceil((state.activePotions[pid]-Date.now())/1000));
-const chip = document.createElement('div');
-chip.className='potionChip';
-chip.textContent = POTION_BY_ID[pid].name+' • '+secs+'s';
-row.appendChild(chip);
-}
+// Live odds: each tier keeps its fixed TIER_PCT share (scaled by luck for Legendary+), split
+// evenly across whatever items in that tier are currently obtainable (i.e. not Trash-locked),
+// then renormalized so the total is always exactly 100%.
+function salvageOdds(){
+const byTier = obtainablePool();
+const tierShare = {};
+RARITY_ORDER.forEach(tier=>{
+if(byTier[tier].length === 0){ tierShare[tier] = 0; return; }
+let pct = TIER_PCT[tier];
+if(LUCKY_TIERS.includes(tier)) pct *= state.luck;
+tierShare[tier] = pct;
 });
-if(state.pendingNextRoll>0){
-const chip = document.createElement('div');
-chip.className='potionChip';
-chip.textContent = 'Transcendent Boost Ready';
-row.appendChild(chip);
-}
+const total = Object.values(tierShare).reduce((a,b)=>a+b,0);
+
+const itemWeight = {}; // id -> weight (pre-normalization)
+const itemPct = {}; // id -> % chance
+const tierPct = {}; // tier -> % chance
+RARITY_ORDER.forEach(tier=>{
+tierPct[tier] = total > 0 ? (tierShare[tier]/total*100) : 0;
+const ids = byTier[tier];
+if(ids.length === 0) return;
+const each = tierShare[tier]/ids.length;
+ids.forEach(id=>{
+itemWeight[id] = each;
+itemPct[id] = total > 0 ? (each/total*100) : 0;
+});
+});
+return { byTier, itemWeight, itemPct, tierPct, total };
 }
 
-function toggleEquipAura(id){
-if(state.equippedAuras.has(id)){
-state.equippedAuras.delete(id);
+function rollSalvage(){
+const { itemWeight, total } = salvageOdds();
+let r = Math.random()*total;
+for(const [id,w] of Object.entries(itemWeight)){
+if(r < w) return id;
+r -= w;
+}
+const ids = Object.keys(itemWeight);
+return ids[ids.length-1];
+}
+
+function doSalvage(){
+const cost = salvageCost();
+if(state.clicks < cost) return;
+state.clicks -= cost;
+
+const id = rollSalvage();
+state.inventory[id] = (state.inventory[id]||0) + 1;
+const def = UNITS[id];
+
+const tierIdx = RARITY_ORDER.indexOf(def.rarity);
+let unlockMsg = '';
+if(tierIdx > state.rarestTier){
+state.rarestTier = tierIdx;
+unlockMsg = ` NEW RARITY REACHED — first ${RARITY_LABEL[def.rarity]} obtained!`;
+}
+
+const resEl = document.getElementById('salvageResult');
+resEl.innerHTML = `${def.icon} <span class="r-${def.rarity}" style="padding:2px 6px;border-radius:4px;">${RARITY_LABEL[def.rarity]}</span> ${def.name} obtained!${unlockMsg ? '<br><span style="color:var(--gold);">'+unlockMsg+'</span>' : ''}`;
+resEl.style.animation = 'none';
+void resEl.offsetWidth;
+resEl.style.animation = 'resultPop .5s ease';
+
+const log = document.getElementById('salvageLog');
+const entry = document.createElement('div');
+entry.textContent = `${def.icon} ${def.name} (${RARITY_LABEL[def.rarity]})`;
+log.prepend(entry);
+while(log.children.length > 25) log.removeChild(log.lastChild);
+
+renderAll();
+}
+
+document.getElementById('salvageBtn').addEventListener('click', doSalvage);
+
+/* ============================ EQUIP / UNEQUIP ============================ */
+
+function equip(id){
+if(isEquipped(id)) return;
+const freeSlot = state.slots.findIndex(s=>s===null);
+if(freeSlot === -1) return;
+if(!state.inventory[id] || state.inventory[id] <= 0) return;
+state.slots[freeSlot] = id;
+renderAll();
+}
+
+function unequip(slotIdx){
+state.slots[slotIdx] = null;
+renderAll();
+}
+
+/* ============================ UPGRADES ============================ */
+
+function buyUpgrade(u){
+if(upgradeOwned(u.id)) return;
+if(u.requires && !u.requires.every(r=>upgradeOwned(r))) return;
+const balance = u.currency === 'tokens' ? state.tokens : state.clicks;
+if(balance < u.cost) return;
+if(u.currency === 'tokens') state.tokens -= u.cost; else state.clicks -= u.cost;
+state.upgradesOwned[u.id] = true;
+u.effect(state);
+renderAll();
+}
+
+/* ============================ SAVE / LOAD (copy & paste text) ============================ */
+
+const SAVE_VERSION = 2;
+
+function showToast(msg, isError){
+const el = document.getElementById('saveToast');
+el.textContent = msg;
+el.className = isError ? 'error' : '';
+el.style.display = 'block';
+clearTimeout(showToast._t);
+showToast._t = setTimeout(()=>{ el.style.display = 'none'; }, 3500);
+}
+
+const exportPanel = document.getElementById('exportPanel');
+const importPanel = document.getElementById('importPanel');
+const exportText = document.getElementById('exportText');
+const importText = document.getElementById('importText');
+
+function buildSaveString(){
+const payload = {
+version: SAVE_VERSION,
+savedAt: Date.now(),
+state: state
+};
+return JSON.stringify(payload);
+}
+
+function openExportPanel(){
+importPanel.style.display = 'none';
+exportText.value = buildSaveString();
+exportPanel.style.display = 'block';
+exportText.focus();
+exportText.select();
+}
+
+function openImportPanel(){
+exportPanel.style.display = 'none';
+importText.value = '';
+importPanel.style.display = 'block';
+importText.focus();
+}
+
+async function copyExportText(){
+const text = exportText.value;
+try{
+if(navigator.clipboard && window.isSecureContext){
+await navigator.clipboard.writeText(text);
 } else {
-if(state.inventory[id] <= 0){ toast("You don't own any "+AURA_BY_ID[id].name+" auras yet."); return; }
-state.equippedAuras.clear();
-state.equippedAuras.add(id);
-state.ambientIndex = -1;
+exportText.focus();
+exportText.select();
+document.execCommand('copy');
 }
-renderTab();
-renderEquippedRow();
-updateStageTheme();
+showToast('Copied! Paste it somewhere safe.');
+} catch(err){
+exportText.focus();
+exportText.select();
+showToast('Could not auto-copy — text is selected, press Ctrl/Cmd+C.', true);
+}
 }
 
-/* ===================== GAUNTLETS ===================== */
-function reqMetText(req){
-return Object.entries(req).map(([id,n])=>{
-const have = state.inventory[id]||0;
-const ok = have>=n;
-return `<span class="${ok?'ok':'no'}">${AURA_BY_ID[id].name} ${have}/${n}</span>`;
+const REQUIRED_STATE_KEYS = ['clicks','tokens','clickMult','luck','tokenPerClickBonus','trashUnlocked',
+'betterBatteries','maskIcon','upgradesOwned','inventory','slots','unpowered','freddles','nfTickCount','rarestTier'];
+
+function importSaveFromText(raw){
+try{
+const trimmed = raw.trim();
+if(!trimmed) throw new Error('Paste your save text first.');
+const payload = JSON.parse(trimmed);
+const loaded = payload && payload.state ? payload.state : payload; // accept raw state too
+if(!loaded || typeof loaded !== 'object') throw new Error('That is not a valid save.');
+const missing = REQUIRED_STATE_KEYS.filter(k=>!(k in loaded));
+if(missing.length) throw new Error('Missing fields: '+missing.join(', '));
+
+// reset accumulators so production doesn't burst-catch-up on load
+Object.keys(accum).forEach(id=>accum[id]=0);
+freddleAccum = 0;
+
+// wipe and replace state in place (keeps the same object reference alive for closures)
+Object.keys(state).forEach(k=>delete state[k]);
+Object.assign(state, loaded);
+
+renderAll();
+importPanel.style.display = 'none';
+showToast('Save imported!');
+} catch(err){
+showToast('Import failed: '+err.message, true);
+}
+}
+
+document.getElementById('exportBtn').addEventListener('click', openExportPanel);
+document.getElementById('importBtn').addEventListener('click', openImportPanel);
+document.getElementById('closeExportBtn').addEventListener('click', ()=>exportPanel.style.display='none');
+document.getElementById('closeImportBtn').addEventListener('click', ()=>importPanel.style.display='none');
+document.getElementById('copyExportBtn').addEventListener('click', copyExportText);
+document.getElementById('doImportBtn').addEventListener('click', ()=>importSaveFromText(importText.value));
+
+/* ============================ RENDER ============================ */
+
+function renderStats(){
+const cVal = document.getElementById('clicksVal');
+const tVal = document.getElementById('tokensVal');
+const newC = fmt(state.clicks);
+const newT = fmt(state.tokens);
+if(cVal.textContent !== newC){ cVal.textContent = newC; pulse(cVal); }
+if(tVal.textContent !== newT){ tVal.textContent = newT; pulse(tVal); }
+document.getElementById('clicksRate').textContent = `+${fmt(currentClicksPerSec())} / sec`;
+document.getElementById('perClickVal').textContent = '+'+fmt(perClickTokens());
+maskBtn.textContent = state.maskIcon;
+}
+
+function unitLine(id){
+const def = UNITS[id];
+let line = '';
+if(def.clicks !== undefined) line += `${def.clicks} Clicks / ${def.period}s`;
+if(def.tokens !== undefined) line += `${line?' + ':''}${def.tokens} FazToken / ${def.period}s`;
+return line;
+}
+
+function renderSlots(){
+const wrap = document.getElementById('slots');
+wrap.innerHTML = '';
+state.slots.forEach((id, i)=>{
+const div = document.createElement('div');
+div.className = 'slot' + (id?' filled':' empty') + (id && state.unpowered[id] ? ' unpowered':'');
+div.innerHTML = `<span class="num">${i+1}</span>`;
+if(id){
+const def = UNITS[id];
+div.innerHTML += `<div class="icon">${def.icon}</div><div class="name">${def.name}</div>`;
+if(def.passive) div.innerHTML += `<span class="pstar" title="${def.passive}">★</span>`;
+div.title = def.passive ? `Click to unequip\nPassive: ${def.passive}` : 'Click to unequip';
+div.addEventListener('click', ()=>unequip(i));
+} else {
+div.innerHTML += `<div class="icon">➕</div><div class="name">empty</div>`;
+}
+wrap.appendChild(div);
+});
+renderPassivesPanel();
+}
+
+function renderPassivesPanel(){
+const panel = document.getElementById('passivesPanel');
+const list = document.getElementById('passivesList');
+const withPassives = equippedIds().map(id=>UNITS[id]).filter(d=>d.passive);
+if(withPassives.length === 0){
+panel.style.display = 'none';
+return;
+}
+panel.style.display = 'block';
+list.innerHTML = withPassives.map(d=>`<div class="pline">${d.icon} <b>${d.name}:</b> ${d.passive}</div>`).join('');
+}
+
+function renderInventory(){
+const wrap = document.getElementById('inventory');
+wrap.innerHTML = '';
+const ids = Object.keys(state.inventory).filter(id=>state.inventory[id] > 0);
+if(ids.length === 0){
+wrap.innerHTML = `<div style="color:var(--dim);">Nothing in inventory.</div>`;
+return;
+}
+ids.sort((a,b)=> RARITY_ORDER.indexOf(UNITS[a].rarity) - RARITY_ORDER.indexOf(UNITS[b].rarity));
+ids.forEach(id=>{
+const def = UNITS[id];
+const equipped = isEquipped(id);
+const card = document.createElement('div');
+card.className = 'card';
+card.innerHTML = `
+<span class="rarity-tag r-${def.rarity}">${RARITY_LABEL[def.rarity]}</span>${def.passive ? '<span class="passive-badge">★ PASSIVE</span>' : ''}
+<div class="cname"><span class="ic">${def.icon}</span>${def.name}</div>
+<div class="desc">${def.desc}</div>
+<div class="desc" style="color:var(--teal);">${unitLine(id)} &middot; Upkeep: ${upkeepCost(id)} FazTokens /10s</div>
+${def.passive ? `<div class="passive-line"><b>★ Passive:</b> ${def.passive}</div>` : ''}
+<div class="count">Owned: ${state.inventory[id]}</div>
+<button class="act ${equipped?'owned':''}" ${equipped ? 'disabled' : ''}>${equipped ? 'EQUIPPED' : 'EQUIP'}</button>
+`;
+const btn = card.querySelector('button');
+if(!equipped){
+btn.addEventListener('click', ()=>equip(id));
+if(state.slots.every(s=>s!==null)){
+btn.disabled = true;
+btn.textContent = 'SLOTS FULL';
+}
+}
+wrap.appendChild(card);
+});
+}
+
+function renderUpgrades(){
+const wrap = document.getElementById('upgrades');
+wrap.innerHTML = '';
+UPGRADES.forEach(u=>{
+const owned = upgradeOwned(u.id);
+const lockedReq = u.requires && !u.requires.every(r=>upgradeOwned(r));
+const div = document.createElement('div');
+div.className = 'upg' + (owned ? ' done' : '');
+const currencyLabel = u.currency === 'tokens' ? 'FazTokens' : 'Clicks';
+div.innerHTML = `
+<div class="info">
+<div class="uname">${u.name}</div>
+<div class="udesc">${u.desc}${lockedReq ? ' <span style="color:var(--red);">(requires prerequisite upgrades)</span>' : ''}</div>
+<div class="ucost">Cost: ${fmt(u.cost)} ${currencyLabel}</div>
+</div>
+`;
+if(!owned){
+const btn = document.createElement('button');
+btn.className = 'act';
+btn.textContent = 'BUY';
+const balance = u.currency === 'tokens' ? state.tokens : state.clicks;
+btn.disabled = lockedReq || balance < u.cost;
+btn.addEventListener('click', ()=>buyUpgrade(u));
+div.appendChild(btn);
+}
+wrap.appendChild(div);
+});
+}
+
+function renderSalvagePanel(){
+document.getElementById('luckLine').textContent = `Salvage Luck: ${state.luck}x (boosts Legendary+ odds) &middot; Rarest Reached: ${RARITY_LABEL[RARITY_ORDER[state.rarestTier]]}`.replace('&middot;','·');
+document.getElementById('trashNote').style.display = state.trashUnlocked ? 'none' : 'block';
+const cost = salvageCost();
+const btn = document.getElementById('salvageBtn');
+btn.textContent = `SALVAGE — ${fmt(cost)} Clicks`;
+btn.disabled = state.clicks < cost;
+renderRarityGuide();
+}
+
+function renderRarityGuide(){
+const wrap = document.getElementById('rarityGuide');
+const odds = salvageOdds();
+const byRarity = {};
+RARITY_ORDER.forEach(r=>byRarity[r]=[]);
+Object.entries(UNITS).forEach(([id,def])=>byRarity[def.rarity].push({id,def}));
+
+wrap.innerHTML = RARITY_ORDER.map((tier)=>{
+const tierPctTxt = odds.tierPct[tier].toFixed(tier==='rare'||tier==='epic' ? 2 : 4) + '%';
+const items = byRarity[tier].map(({id,def})=>{
+const trashLocked = def.trash && !state.trashUnlocked;
+const pctTxt = trashLocked ? '' : ` <span style="color:var(--gold);">(${odds.itemPct[id].toFixed(tier==='rare'||tier==='epic' ? 2 : 4)}%)</span>`;
+return `<span class="item${trashLocked?' locked-item':''}">${trashLocked ? '🔒' : def.icon} ${def.name}${def.trash ? ' <span class="tg">[TRASH GANG]</span>' : ''}${pctTxt}</span>`;
+}).join('');
+return `
+<div class="rguide-tier">
+<div class="rguide-head">
+<span class="rarity-tag r-${tier}">${RARITY_LABEL[tier]}</span>
+<span style="font-size:12px;color:var(--dim);">always obtainable</span>
+<span class="cost">chance: ${tierPctTxt} &middot; cost while this is your rarest tier: ${fmt(TIER_COST[tier])} Clicks</span>
+</div>
+<div class="rguide-items">${items}</div>
+</div>
+`;
 }).join('');
 }
-function canCraft(g){
-return Object.entries(g.req).every(([id,n])=>(state.inventory[id]||0)>=n);
-}
-function craft(gid){
-const g = GAUNTLET_BY_ID[gid];
-if(!canCraft(g)){ toast('Missing materials for '+g.name); return; }
-Object.entries(g.req).forEach(([id,n])=>{ state.inventory[id]-=n; });
-state.gauntletsOwned[gid]++;
-toast('Crafted '+g.name+'!');
-updateAllCounters();
-}
-function equipGauntlet(gid, slot){
-if(state.gauntletsOwned[gid] <= 0) return;
-const g = GAUNTLET_BY_ID[gid];
-if(g.slot==='left-only' && slot==='right'){ toast(g.name+' can only go in the LEFT slot.'); return; }
-if(g.slot==='right-only' && slot==='left'){ toast(g.name+' can only go in the RIGHT slot.'); return; }
-if(slot==='left') state.equippedLeft = (state.equippedLeft===gid) ? null : gid;
-if(slot==='right') state.equippedRight = (state.equippedRight===gid) ? null : gid;
+
+function renderAll(){
+renderStats();
 renderSlots();
-renderTab();
-updateBonusDisplay();
-document.getElementById('statCd').textContent = (currentCooldownMs()/1000).toFixed(1)+'s';
-}
-function renderSlots(){
-const l = document.getElementById('slotLeft');
-const r = document.getElementById('slotRight');
-l.classList.toggle('filled', !!state.equippedLeft);
-r.classList.toggle('filled', !!state.equippedRight);
-l.querySelector('.gname').textContent = state.equippedLeft ? GAUNTLET_BY_ID[state.equippedLeft].name : 'Empty';
-r.querySelector('.gname').textContent = state.equippedRight ? GAUNTLET_BY_ID[state.equippedRight].name : 'Empty';
+renderInventory();
+renderUpgrades();
+renderSalvagePanel();
 }
 
-/* ===================== POTIONS LOGIC ===================== */
-function potionReqMetText(p){
-let parts = [];
-Object.entries(p.reqAuras||{}).forEach(([id,n])=>{
-const have = state.inventory[id]||0;
-const ok = have>=n;
-parts.push(`<span class="${ok?'ok':'no'}">${AURA_BY_ID[id].name} ${have}/${n}</span>`);
-});
-Object.entries(p.reqPotions||{}).forEach(([id,n])=>{
-const have = state.potionsOwned[id]||0;
-const ok = have>=n;
-parts.push(`<span class="${ok?'ok':'no'}">${POTION_BY_ID[id].name} ${have}/${n}</span>`);
-});
-return parts.join('');
-}
-function canCraftPotion(p){
-const auraOk = Object.entries(p.reqAuras||{}).every(([id,n])=>(state.inventory[id]||0)>=n);
-const potOk = Object.entries(p.reqPotions||{}).every(([id,n])=>(state.potionsOwned[id]||0)>=n);
-return auraOk && potOk;
-}
-function craftPotion(pid){
-const p = POTION_BY_ID[pid];
-if(!canCraftPotion(p)){ toast('Missing materials for '+p.name); return; }
-Object.entries(p.reqAuras||{}).forEach(([id,n])=>{ state.inventory[id]-=n; });
-Object.entries(p.reqPotions||{}).forEach(([id,n])=>{ state.potionsOwned[id]-=n; });
-state.potionsOwned[pid]++;
-toast('Crafted '+p.name+'!');
-updateAllCounters();
-}
-function equipPotion(pid){
-const p = POTION_BY_ID[pid];
-if((state.potionsOwned[pid]||0) <= 0) return;
-if(p.id==='transcendent' && state.transcendentArmed){
-toast('A Transcendent Potion is already armed for your next roll — roll first!');
-return;
-}
-state.potionsOwned[pid]--;
-if(p.type==='timed'){
-const base = isPotionActive(pid) ? state.activePotions[pid] : Date.now();
-state.activePotions[pid] = base + p.duration*1000;
-toast('Activated '+p.name+'!');
-} else {
-state.pendingNextRoll += p.luckPct;
-state.transcendentArmed = true;
-toast(p.name+' activated! Your next roll is supercharged.');
-}
-updateBonusDisplay();
-document.getElementById('statCd').textContent = (currentCooldownMs()/1000).toFixed(1)+'s';
-renderTab();
-renderPotionRow();
+/* ============================ GAME LOOP ============================ */
+
+let lastTime = performance.now();
+function loop(now){
+const dt = Math.min((now - lastTime)/1000, 0.5);
+lastTime = now;
+tickProduction(dt);
+renderStats();
+requestAnimationFrame(loop);
 }
 
-/* ===================== TABS ===================== */
-let activeTab='inv';
-document.querySelectorAll('.tab').forEach(t=>{
-t.addEventListener('click', ()=>{
-document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-t.classList.add('active');
-activeTab = t.dataset.tab;
-renderTab();
-});
-});
+setInterval(runUpkeep, 10000);
+setInterval(()=>{ renderInventory(); renderUpgrades(); renderSalvagePanel(); }, 500);
 
-function renderTab(){
-const wrap = document.getElementById('tabContent');
-wrap.innerHTML='';
-if(activeTab==='inv'){
-AURAS.forEach(a=>{
-const owned = state.inventory[a.id];
-const total = state.totalObtained[a.id];
-if(total<=0) return;
-const card = document.createElement('div');
-card.className='invCard';
-const eq = state.equippedAuras.has(a.id);
-// Seraphim, Blackhole and Starlord keep their signature glow; every other
-// aura title is stripped of its text-shadow in the inventory list.
-const nameStyle = ['seraphim','blackhole','starlord'].includes(a.id) ? 'font-size:14px;' : 'font-size:14px; text-shadow:none;';
-card.innerHTML = `
-<div class="info">
-<span class="nm ${a.cls}" style="${nameStyle}">${a.name}</span>
-<span class="meta">Owned: ${owned} &nbsp;•&nbsp; Total obtained: ${total}</span>
-</div>
-<button class="miniBtn ${eq?'eq':''}">${eq?'Equipped':'Equip'}</button>`;
-card.querySelector('button').addEventListener('click', ()=>toggleEquipAura(a.id));
-wrap.appendChild(card);
-});
-if(wrap.innerHTML==='') wrap.innerHTML = '<div style="color:var(--dim); font-size:12px; padding:10px;">No auras yet — start rolling!</div>';
-} else if(activeTab==='craft'){
-CRAFT_ORDER.forEach(gid=>{
-const g = GAUNTLET_BY_ID[gid];
-const owned = state.gauntletsOwned[gid];
-const card = document.createElement('div');
-card.className='craftCard';
-const boostText = g.bonusOverride ? 'Bonus Roll → 4x Luck' : ('+'+g.luck+'% Luck'+(g.cooldown?` · ${g.cooldown}s cooldown`:''));
-card.innerHTML = `
-<div class="top"><span class="gn">${g.name}</span><span class="boost">${boostText}</span></div>
-<div class="reqs">${reqMetText(g.req)}</div>
-<button class="craftBtn" ${canCraft(g)?'':'disabled'}>Craft${owned?(' (Owned: '+owned+')'):''}</button>
-<div style="display:flex; gap:6px; margin-top:6px;">
-<button class="miniBtn" data-slot="left" ${(owned && g.slot!=='right-only')?'':'disabled'}>${state.equippedLeft===gid?'Unequip L':'Equip Left'}</button>
-<button class="miniBtn" data-slot="right" ${(owned && g.slot!=='left-only')?'':'disabled'}>${state.equippedRight===gid?'Unequip R':'Equip Right'}</button>
-</div>`;
-card.querySelector('.craftBtn').addEventListener('click', ()=>craft(gid));
-card.querySelectorAll('.miniBtn[data-slot]').forEach(b=>{
-b.addEventListener('click', ()=>equipGauntlet(gid, b.dataset.slot));
-});
-wrap.appendChild(card);
-});
-} else if(activeTab==='potion'){
-// Active potions box
-const activeBox = document.createElement('div');
-activeBox.className='activePotionsBox';
-let activeRows='';
-POTION_ORDER.forEach(pid=>{
-if(isPotionActive(pid)){
-const secs = Math.max(0, Math.ceil((state.activePotions[pid]-Date.now())/1000));
-activeRows += `<div class="row"><span>${POTION_BY_ID[pid].name}</span><span>${secs}s left</span></div>`;
-}
-});
-if(state.pendingNextRoll>0){
-activeRows += `<div class="row"><span>Transcendent Boost</span><span>Guaranteed next roll</span></div>`;
-}
-activeBox.innerHTML = `<div class="title">ACTIVE POTIONS</div>` + (activeRows || `<div class="empty">No active potions.</div>`);
-wrap.appendChild(activeBox);
-
-POTION_ORDER.forEach(pid=>{
-const p = POTION_BY_ID[pid];
-const owned = state.potionsOwned[pid];
-const card = document.createElement('div');
-card.className='craftCard';
-const active = isPotionActive(pid);
-const secsLeft = active ? Math.max(0, Math.ceil((state.activePotions[pid]-Date.now())/1000)) : 0;
-const isTranscendentLocked = (pid==='transcendent' && state.transcendentArmed);
-card.innerHTML = `
-<div class="top"><span class="gn">${p.name}</span><span class="boost">${p.desc}</span></div>
-<div class="reqs">${potionReqMetText(p)}</div>
-<button class="craftBtn" ${canCraftPotion(p)?'':'disabled'}>Craft${owned?(' (Owned: '+owned+')'):''}</button>
-<div style="display:flex; gap:6px; margin-top:6px;">
-<button class="miniBtn eqPotion" ${(owned>0 && !isTranscendentLocked)?'':'disabled'}>${isTranscendentLocked ? 'Already Armed' : (p.type==='timed' ? 'Equip / Activate' : 'Equip for Next Roll')}</button>
-</div>
-${active ? `<div class="potionTimer">Active — ${secsLeft}s remaining</div>` : ''}
-`;
-card.querySelector('.craftBtn').addEventListener('click', ()=>craftPotion(pid));
-card.querySelector('.eqPotion').addEventListener('click', ()=>equipPotion(pid));
-wrap.appendChild(card);
-});
-}
-}
-
-/* tick potion timers every second so countdowns + buffs stay accurate, and
-also refresh the header Luck/Cooldown stats so they don't stay stuck at a
-buffed value after a timed potion (e.g. Speedy) actually expires. */
-setInterval(()=>{
-if(activeTab==='potion') renderTab();
-renderPotionRow();
-updateBonusDisplay();
-document.getElementById('statCd').textContent = (currentCooldownMs()/1000).toFixed(1)+'s';
-}, 1000);
-
-/* ===================== EVENTS ===================== */
-document.getElementById('rollBtn').addEventListener('click', doRoll);
-document.getElementById('autoBtn').addEventListener('click', ()=>{
-state.autoRoll = !state.autoRoll;
-document.getElementById('autoBtn').classList.toggle('active', state.autoRoll);
-document.getElementById('autoState').textContent = state.autoRoll?'ON':'OFF';
-if(state.autoRoll && !state.isRolling) doRoll();
-});
-
-/* ===================== EXPORT / IMPORT SAVE ===================== */
-function buildSavePayload(){
-return {
-v:2,
-rollCount: state.rollCount,
-inventory: state.inventory,
-totalObtained: state.totalObtained,
-gauntletsOwned: state.gauntletsOwned,
-equippedLeft: state.equippedLeft,
-equippedRight: state.equippedRight,
-equippedAuras: Array.from(state.equippedAuras),
-potionsOwned: state.potionsOwned,
-activePotions: state.activePotions,
-pendingNextRoll: state.pendingNextRoll,
-transcendentArmed: state.transcendentArmed,
-};
-}
-function encodeSave(obj){
-return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
-}
-function decodeSave(code){
-return JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
-}
-function refreshAllUI(){
-document.getElementById('statRolls').textContent = fmt(state.rollCount);
-document.getElementById('statCd').textContent = (currentCooldownMs()/1000).toFixed(1)+'s';
-let bestIdx = AURAS.length, bestName='—';
-AURAS.forEach((a,i)=>{ if(state.totalObtained[a.id]>0 && i<bestIdx){ bestIdx=i; bestName=a.name; } });
-state.bestRarityIndex = bestIdx;
-document.getElementById('statBest').textContent = bestName;
-renderSlots();
-updateAllCounters();
-updateBonusDisplay();
-updateStageTheme();
-}
-function applySave(data){
-if(!data || typeof data!=='object') throw new Error('bad data');
-state.rollCount = data.rollCount||0;
-AURAS.forEach(a=>{
-state.inventory[a.id] = (data.inventory && data.inventory[a.id]) || 0;
-state.totalObtained[a.id] = (data.totalObtained && data.totalObtained[a.id]) || 0;
-});
-GAUNTLET_LIST.forEach(g=>{
-state.gauntletsOwned[g.id] = (data.gauntletsOwned && data.gauntletsOwned[g.id]) || 0;
-});
-POTIONS.forEach(p=>{
-state.potionsOwned[p.id] = (data.potionsOwned && data.potionsOwned[p.id]) || 0;
-});
-state.activePotions = data.activePotions || {};
-state.pendingNextRoll = data.pendingNextRoll || 0;
-state.transcendentArmed = !!data.transcendentArmed;
-state.equippedLeft = data.equippedLeft || null;
-state.equippedRight = data.equippedRight || null;
-state.equippedAuras = new Set(data.equippedAuras || []);
-state.ambientIndex = -1;
-state.stageAura = null;
-state.currentBgFxId = null;
-stopFallLoop();
-refreshAllUI();
-}
-
-document.getElementById('exportBtn').addEventListener('click', ()=>{
-document.getElementById('exportText').value = encodeSave(buildSavePayload());
-document.getElementById('exportModal').classList.add('show');
-});
-document.getElementById('exportClose').addEventListener('click', ()=>{
-document.getElementById('exportModal').classList.remove('show');
-});
-document.getElementById('exportCopy').addEventListener('click', ()=>{
-const ta = document.getElementById('exportText');
-ta.select();
-navigator.clipboard && navigator.clipboard.writeText(ta.value).then(()=>toast('Save code copied!')).catch(()=>{
-document.execCommand('copy'); toast('Save code copied!');
-});
-});
-document.getElementById('importBtn').addEventListener('click', ()=>{
-document.getElementById('importText').value='';
-document.getElementById('importModal').classList.add('show');
-});
-document.getElementById('importClose').addEventListener('click', ()=>{
-document.getElementById('importModal').classList.remove('show');
-});
-document.getElementById('importLoad').addEventListener('click', ()=>{
-const code = document.getElementById('importText').value;
-try{
-const data = decodeSave(code);
-applySave(data);
-document.getElementById('importModal').classList.remove('show');
-toast('Save loaded!');
-}catch(e){
-toast('That save code looks invalid.');
-}
-});
-
-/* ===================== INIT ===================== */
-renderOdds();
-renderSlots();
-renderTab();
-updateBonusDisplay();
-updateStageTheme();
-document.getElementById('statCd').textContent = (currentCooldownMs()/1000).toFixed(1)+'s';
+renderAll();
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
